@@ -89,6 +89,19 @@ async def get_campaign_progress(
     )
 
 
+@router.get("/campaigns/{campaign_id}/graph")
+async def get_campaign_graph(
+    campaign_id: UUID,
+    service: CampaignService = Depends(get_campaign_service),
+) -> dict:
+    """Attack-surface graph in cytoscape-compatible JSON."""
+    service.get(campaign_id)  # raises CampaignNotFoundError → 404
+    from nighthawk.database import engine as db_engine_mod
+    from nighthawk.graph.builder import GraphBuilder
+    with db_engine_mod.get_session() as session:
+        return GraphBuilder(session).build(campaign_id).to_cytoscape_json()
+
+
 @router.get("/campaigns/{campaign_id}/findings", response_model=list[Finding])
 async def list_campaign_findings(
     campaign_id: UUID,

@@ -64,6 +64,10 @@ _SEVERITY_ORDER: dict[Severity, int] = {
 }
 
 
+# Provenance richness for platform display: web > network > dns.
+_PLATFORM_RANK = {"web": 3, "network": 2, "dns": 1}
+
+
 class CampaignService:
     """Owns campaign lifecycle, persistence, and event fan-out."""
 
@@ -278,15 +282,57 @@ class CampaignService:
         return finding
 
     def add_asset(self, campaign_id: UUID, asset: Asset) -> Asset:
-        """Persist an asset under a campaign and emit discovery.asset."""
+        """Persist an asset under a campaign and emit discovery.asset.
+
+        Idempotent per (campaign, hostname): re-discovery merges
+        services/technologies/addresses into the existing row instead of
+        duplicating it, so module re-runs and rescans cannot inflate assets.
+        The `platform` column records the richest provenance view
+        (web > network > dns) and metadata['platforms'] keeps all of them.
+        Hostname-less assets are always inserted (nothing to merge on).
+        """
         with db_engine_mod.get_session() as session:
             row = self._get_row(session, campaign_id)
-            asset_row = domain_to_asset_db(asset, campaign_id=campaign_id)
-            session.add(asset_row)
-            session.flush()
-            seq = row.touch_seq()
-            session.commit()
-            stored = asset_db_to_domain(asset_row)
+            existing = None
+            if asset.hostname:
+                existing = session.scalars(
+                    select(AssetDB).where(
+                        AssetDB.campaign_id == campaign_id,
+                        AssetDB.hostname == asset.hostname,
+                    )
+                ).first()
+            if existing is None:
+                asset_row = domain_to_asset_db(asset, campaign_id=campaign_id)
+                session.add(asset_row)
+                session.flush()
+                stored = asset_db_to_domain(asset_row)
+                seq = row.touch_seq()
+                session.commit()
+            else:
+                existing.services = sorted(
+                    set(existing.services or []) | set(asset.services or [])
+                )
+                existing.technologies = sorted(
+                    set(existing.technologies or []) | set(asset.technologies or [])
+                )
+                existing.ip_addresses = sorted(
+                    set(existing.ip_addresses or []) | set(asset.ip_addresses or [])
+                )
+                merged_metadata = dict(existing.asset_metadata or {})
+                merged_metadata.update(asset.metadata)
+                platforms = set(merged_metadata.get("platforms") or {existing.platform}) | {
+                    asset.platform
+                }
+                merged_metadata["platforms"] = sorted(platforms)
+                existing.asset_metadata = merged_metadata
+                if _PLATFORM_RANK.get(asset.platform, -1) > _PLATFORM_RANK.get(
+                    existing.platform, -1
+                ):
+                    existing.platform = asset.platform
+                existing.last_seen = datetime.now(timezone.utc)
+                seq = row.touch_seq()
+                session.commit()
+                stored = asset_db_to_domain(existing)
         self._publish(
             str(campaign_id),
             Event(
@@ -295,7 +341,7 @@ class CampaignService:
                 seq=seq,
                 message=asset.hostname or str(asset.id),
                 payload={
-                    "asset_id": str(asset.id),
+                    "asset_id": str(stored.id),
                     "hostname": asset.hostname,
                     "platform": asset.platform,
                 },
@@ -316,6 +362,48 @@ class CampaignService:
                 )
             )
             session.commit()
+
+    def emit_graph_updated(self, campaign_id: UUID) -> None:
+        """Emit graph.updated with the next sequence number."""
+        with db_engine_mod.get_session() as session:
+            row = self._get_row(session, campaign_id)
+            seq = row.touch_seq()
+            session.commit()
+        self._publish(
+            str(campaign_id),
+            Event(
+                type=EventType.GRAPH_UPDATED,
+                campaign_id=campaign_id,
+                seq=seq,
+                message="attack surface updated",
+            ),
+        )
+
+    def record_scan_error(
+        self, campaign_id: UUID, module: str, target: str, error: str,
+    ) -> None:
+        """Record a module failure: scan_results row + scan.error event."""
+        with db_engine_mod.get_session() as session:
+            row = self._get_row(session, campaign_id)
+            session.add(
+                ScanResultDB(
+                    campaign_id=campaign_id, module=module,
+                    target=target, result_json={"error": error},
+                )
+            )
+            seq = row.touch_seq()
+            session.commit()
+        self._publish(
+            str(campaign_id),
+            Event(
+                type=EventType.SCAN_ERROR,
+                campaign_id=campaign_id,
+                seq=seq,
+                message=f"{module} failed for {target}",
+                severity="error",
+                payload={"module": module, "target": target, "error": error},
+            ),
+        )
 
     # ------------------------------------------------------------------ #
     # Queries

@@ -23,6 +23,27 @@ class AttackSurfaceGraph:
     def to_json(self) -> dict[str, Any]:
         return nx.node_link_data(self.graph, edges="links")
 
+    def to_cytoscape_json(self) -> dict[str, Any]:
+        """Frontend contract: {nodes: [{id, label, type, data}], edges: [{source, target, relationship}]}."""
+        nodes = []
+        for node_id, attrs in self.graph.nodes(data=True):
+            node_attrs = dict(attrs)
+            nodes.append({
+                "id": node_id,
+                "label": node_attrs.pop("label", node_id),
+                "type": node_attrs.pop("node_type", "unknown"),
+                "data": node_attrs,
+            })
+        edges = [
+            {
+                "source": u,
+                "target": v,
+                "relationship": attrs.get("relationship", "related"),
+            }
+            for u, v, attrs in self.graph.edges(data=True)
+        ]
+        return {"nodes": nodes, "edges": edges}
+
     def export_json_file(self, path: str) -> None:
         import json
         data = self.to_json()
