@@ -726,6 +726,8 @@ def repair(
     """Repair or update NIGHTHAWK from GitHub repository."""
     import subprocess
     import sys
+    import tempfile
+    from pathlib import Path
     
     console.print(create_header_panel("Self-Repair & Update", "Reinstall from GitHub Repository"))
     console.print()
@@ -741,10 +743,10 @@ def repair(
         
         if not force:
             print_warning(console, "This will:")
-            console.print("  1. Uninstall current NIGHTHAWK installation")
-            console.print("  2. Clear pip cache")
-            console.print("  3. Reinstall from GitHub repository")
-            console.print("  4. Remove user configuration (optional)")
+            console.print("  1. Create a repair script")
+            console.print("  2. Exit NIGHTHAWK")
+            console.print("  3. Uninstall and reinstall from GitHub")
+            console.print("  4. Restart to verify installation")
             console.print()
             
             confirm = typer.confirm("Continue with repair/update?")
@@ -752,63 +754,85 @@ def repair(
                 print_info(console, "Repair cancelled")
                 raise typer.Exit(0)
         
-        # Step 1: Uninstall current version
+        # Create a temporary repair script that will run after this process exits
+        repair_script = f"""
+import subprocess
+import sys
+import time
+
+print("\\n[NIGHTHAWK Self-Repair]\\n")
+print("Step 1: Waiting for NIGHTHAWK to close...")
+time.sleep(2)
+
+print("Step 2: Uninstalling current version...")
+result = subprocess.run([sys.executable, "-m", "pip", "uninstall", "nighthawk", "-y"], capture_output=True, text=True)
+if "Successfully uninstalled" in result.stdout or "not installed" in result.stderr.lower():
+    print("  [+] Uninstalled")
+else:
+    print("  [!] No previous installation found")
+
+print("Step 3: Clearing pip cache...")
+subprocess.run([sys.executable, "-m", "pip", "cache", "purge"], capture_output=True)
+print("  [+] Cache cleared")
+
+print("Step 4: Installing from GitHub...")
+print("  Repository: {repo_url}")
+result = subprocess.run(
+    [sys.executable, "-m", "pip", "install", "--no-cache-dir", "{repo_url}"],
+    capture_output=False
+)
+
+if result.returncode == 0:
+    print("\\n[+] Installation successful!")
+    print("\\nVerifying installation...")
+    subprocess.run([sys.executable, "-m", "nighthawk.cli.main", "--version"])
+    print("\\n[+] Repair complete!")
+    print("\\nYou can now use NIGHTHAWK normally.")
+else:
+    print("\\n[-] Installation failed!")
+    print("\\nTry manual installation:")
+    print("  pip uninstall nighthawk -y")
+    print("  pip cache purge")
+    print("  pip install git+https://github.com/Xenoz-GitHub/NightHawk.git@{branch}")
+
+input("\\nPress Enter to close...")
+"""
+        
+        # Save repair script to temp file
+        temp_dir = Path(tempfile.gettempdir())
+        script_path = temp_dir / "nighthawk_repair.py"
+        script_path.write_text(repair_script)
+        
+        print_success(console, f"Created repair script: {script_path}")
         console.print()
-        with console.status("[bold cyan]Uninstalling current version...[/bold cyan]"):
-            result = subprocess.run(
-                [sys.executable, "-m", "pip", "uninstall", "nighthawk", "-y"],
-                capture_output=True,
-                text=True
+        print_info(console, "Starting repair process...")
+        print_warning(console, "NIGHTHAWK will now close. The repair will continue in a new window.")
+        console.print()
+        
+        # Start the repair script in a new process
+        if sys.platform == "win32":
+            # Windows: Start in new console window
+            subprocess.Popen(
+                ["cmd", "/c", "start", "cmd", "/k", sys.executable, str(script_path)],
+                creationflags=subprocess.CREATE_NEW_CONSOLE
             )
-            if result.returncode == 0:
-                print_success(console, "Uninstalled current version")
-            else:
-                print_warning(console, "No existing installation found")
-        
-        # Step 2: Clear pip cache
-        with console.status("[bold cyan]Clearing pip cache...[/bold cyan]"):
-            result = subprocess.run(
-                [sys.executable, "-m", "pip", "cache", "purge"],
-                capture_output=True,
-                text=True
-            )
-            if result.returncode == 0:
-                print_success(console, "Cleared pip cache")
-        
-        # Step 3: Reinstall from GitHub
-        console.print()
-        print_info(console, "Installing from GitHub (this may take a minute)...")
-        console.print()
-        
-        result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--no-cache-dir", repo_url],
-            capture_output=False,  # Show output to user
-            text=True
-        )
-        
-        if result.returncode == 0:
-            console.print()
-            print_success(console, "Successfully installed NIGHTHAWK from GitHub!")
-            console.print()
-            print_info(console, "Verify installation with: [cyan]nighthawk --version[/cyan]")
-            
-            # Ask about config cleanup
-            if not force:
-                console.print()
-                cleanup = typer.confirm("Also remove user configuration (~/.nighthawk)?", default=False)
-                if cleanup:
-                    import shutil
-                    from pathlib import Path
-                    config_dir = Path.home() / ".nighthawk"
-                    if config_dir.exists():
-                        shutil.rmtree(config_dir)
-                        print_success(console, "Removed user configuration")
-                    else:
-                        print_info(console, "No configuration directory found")
         else:
-            print_error(console, "Installation failed!")
-            print_info(console, "Check the error messages above for details")
-            raise typer.Exit(1)
+            # Linux/macOS: Start in background
+            subprocess.Popen(
+                [sys.executable, str(script_path)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+        
+        print_success(console, "Repair process started!")
+        print_info(console, "This window will close in 2 seconds...")
+        console.print()
+        
+        import time
+        time.sleep(2)
+        
+        # Exit to allow repair
+        raise typer.Exit(0)
         
     except KeyboardInterrupt:
         print_warning(console, "Repair cancelled by user")
