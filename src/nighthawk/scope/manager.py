@@ -59,19 +59,21 @@ class ScopeManager:
     def is_authorized(self, target: str) -> bool:
         """Check whether a target string falls within scope."""
         try:
+            normalized_target = self._normalize_target(target)
+
             # IP/CIDR check
-            if self._is_ip_or_cidr_target(target):
-                return self._check_ip_scope(target)
+            if self._is_ip_or_cidr_target(normalized_target):
+                return self._check_ip_scope(normalized_target)
+
             # Domain check
-            if self._is_domain_target(target):
-                return target in self.config.domains or any(
-                    target.endswith("." + d) or d.endswith("." + target)
-                    for d in self.config.domains
-                    if target and d
-                )
+            if self._is_domain_target(normalized_target):
+                return self._domain_is_authorized(normalized_target)
+
             # URL check
             if target.startswith(("http://", "https://")):
-                return target in self.config.urls
+                url = self._normalize_url(target)
+                return url in {self._normalize_url(u) for u in self.config.urls}
+
             # Repository check
             if Path(target).exists() or target.startswith(("./", "/", ".git")):
                 return target in self.config.repositories or any(
@@ -80,6 +82,33 @@ class ScopeManager:
                 )
         except Exception:
             return False
+        return False
+
+    def _normalize_target(self, target: str) -> str:
+        if not target:
+            return target
+        if target.startswith(("http://", "https://")):
+            return self._normalize_url(target)
+        return target.rstrip("/")
+
+    def _normalize_url(self, url: str) -> str:
+        parsed = url.strip().rstrip("/")
+        if parsed.startswith(("http://", "https://")):
+            return parsed
+        return parsed
+
+    def _domain_is_authorized(self, target: str) -> bool:
+        target = target.strip().lower().rstrip(".")
+        for allowed in self.config.domains:
+            allowed = str(allowed).strip().lower().rstrip(".")
+            if not allowed:
+                continue
+            if allowed.startswith("*."):
+                suffix = allowed[2:]
+                if target == suffix or target.endswith("." + suffix):
+                    return True
+            if target == allowed or target.endswith("." + allowed) or allowed.endswith("." + target):
+                return True
         return False
 
     def _is_ip_or_cidr_target(self, target: str) -> bool:

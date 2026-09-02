@@ -43,3 +43,17 @@ def test_scope_load_legacy_example_schema(tmp_path):
     assert manager.config.name == "default_scope"
     assert manager.config.allowed_modules == ["web", "network"]
     assert manager.is_authorized("example.com")
+
+
+def test_scope_authorizes_url_with_trailing_slash_and_domain_root(tmp_path):
+    scope_file = tmp_path / "scope.yaml"
+    scope_file.write_text(
+        "name: test\n"
+        "domains:\n"
+        "  - vercel.app\n"
+        "urls:\n"
+        "  - https://hyenso-portfolio.vercel.app\n"
+    )
+    manager = ScopeManager(str(scope_file))
+    assert manager.is_authorized("https://hyenso-portfolio.vercel.app/")
+    assert manager.is_authorized("hyenso-portfolio.vercel.app")
