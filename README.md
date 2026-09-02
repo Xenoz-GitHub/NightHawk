@@ -125,6 +125,26 @@ nighthawk --banner           # Display full ASCII banner
 nighthawk --help             # Show help menu
 ```
 
+### Self-Repair & Update
+```bash
+nighthawk repair                    # Repair/update from GitHub
+nighthawk repair --force            # Force repair without prompts
+nighthawk repair --branch main      # Repair from specific branch
+```
+
+**One-Command Fix**: If NIGHTHAWK is broken or you want the latest version:
+```bash
+nighthawk repair --force
+```
+
+This automatically:
+- Uninstalls current version
+- Clears pip cache
+- Reinstalls from GitHub
+- Optionally cleans configuration
+
+See [REPAIR-GUIDE.md](REPAIR-GUIDE.md) for complete documentation.
+
 ### Scope Management
 ```bash
 nighthawk scope --create                    # Create example scope.yaml

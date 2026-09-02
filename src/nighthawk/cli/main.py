@@ -719,6 +719,106 @@ def assess(
 
 
 @app.command()
+def repair(
+    branch: str = typer.Option("encrypted-crew-v2", "--branch", "-b", help="Branch to install from."),
+    force: bool = typer.Option(False, "--force", "-f", help="Force reinstall without confirmation."),
+) -> None:
+    """Repair or update NIGHTHAWK from GitHub repository."""
+    import subprocess
+    import sys
+    
+    console.print(create_header_panel("Self-Repair & Update", "Reinstall from GitHub Repository"))
+    console.print()
+    
+    repo_url = f"git+https://github.com/Xenoz-GitHub/NightHawk.git@{branch}"
+    
+    try:
+        # Show what will happen
+        print_info(console, f"Repository: https://github.com/Xenoz-GitHub/NightHawk")
+        print_info(console, f"Branch: {branch}")
+        print_info(console, f"Current version: {__version__}")
+        console.print()
+        
+        if not force:
+            print_warning(console, "This will:")
+            console.print("  1. Uninstall current NIGHTHAWK installation")
+            console.print("  2. Clear pip cache")
+            console.print("  3. Reinstall from GitHub repository")
+            console.print("  4. Remove user configuration (optional)")
+            console.print()
+            
+            confirm = typer.confirm("Continue with repair/update?")
+            if not confirm:
+                print_info(console, "Repair cancelled")
+                raise typer.Exit(0)
+        
+        # Step 1: Uninstall current version
+        console.print()
+        with console.status("[bold cyan]Uninstalling current version...[/bold cyan]"):
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "uninstall", "nighthawk", "-y"],
+                capture_output=True,
+                text=True
+            )
+            if result.returncode == 0:
+                print_success(console, "Uninstalled current version")
+            else:
+                print_warning(console, "No existing installation found")
+        
+        # Step 2: Clear pip cache
+        with console.status("[bold cyan]Clearing pip cache...[/bold cyan]"):
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "cache", "purge"],
+                capture_output=True,
+                text=True
+            )
+            if result.returncode == 0:
+                print_success(console, "Cleared pip cache")
+        
+        # Step 3: Reinstall from GitHub
+        console.print()
+        print_info(console, "Installing from GitHub (this may take a minute)...")
+        console.print()
+        
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--no-cache-dir", repo_url],
+            capture_output=False,  # Show output to user
+            text=True
+        )
+        
+        if result.returncode == 0:
+            console.print()
+            print_success(console, "Successfully installed NIGHTHAWK from GitHub!")
+            console.print()
+            print_info(console, "Verify installation with: [cyan]nighthawk --version[/cyan]")
+            
+            # Ask about config cleanup
+            if not force:
+                console.print()
+                cleanup = typer.confirm("Also remove user configuration (~/.nighthawk)?", default=False)
+                if cleanup:
+                    import shutil
+                    from pathlib import Path
+                    config_dir = Path.home() / ".nighthawk"
+                    if config_dir.exists():
+                        shutil.rmtree(config_dir)
+                        print_success(console, "Removed user configuration")
+                    else:
+                        print_info(console, "No configuration directory found")
+        else:
+            print_error(console, "Installation failed!")
+            print_info(console, "Check the error messages above for details")
+            raise typer.Exit(1)
+        
+    except KeyboardInterrupt:
+        print_warning(console, "Repair cancelled by user")
+        raise typer.Exit(130)
+    except Exception as exc:
+        print_error(console, f"Repair failed: {exc}")
+        raise typer.Exit(1)
+
+
+@app.command()
 def config(
     action: str = typer.Argument("show", help="Action: show, set, reset, export"),
     key: str = typer.Option(None, "--key", "-k", help="Configuration key (e.g., theme.primary_color)"),
