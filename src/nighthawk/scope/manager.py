@@ -24,7 +24,7 @@ class ScopeManager:
         if not self.config_path.exists():
             # Auto-create a safe default scope for first-time users
             default_data = {
-                "name": "default_lab",
+                "name": "default_scope",
                 "domains": ["localhost", "127.0.0.1"],
                 "ips": ["127.0.0.1"],
                 "cidrs": ["127.0.0.0/8"],
@@ -39,7 +39,20 @@ class ScopeManager:
             logger.info("scope_default_created", path=str(self.config_path))
         try:
             data = yaml.safe_load(self.config_path.read_text()) or {}
-            return ScopeConfig(**data)
+            if not isinstance(data, dict):
+                data = {}
+
+            normalized = dict(data)
+            normalized.setdefault("name", "default_scope")
+
+            legacy_modules = normalized.pop("modules", None)
+            if "allowed_modules" not in normalized and legacy_modules:
+                normalized["allowed_modules"] = legacy_modules
+            elif isinstance(normalized.get("allowed_modules"), list) and not normalized["allowed_modules"] and legacy_modules:
+                normalized["allowed_modules"] = legacy_modules
+
+            normalized.pop("metadata", None)
+            return ScopeConfig(**normalized)
         except Exception as exc:
             raise ConfigurationError(f"Invalid scope file: {exc}") from exc
 

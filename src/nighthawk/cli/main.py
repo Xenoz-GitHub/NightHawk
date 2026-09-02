@@ -344,6 +344,7 @@ def scope(
         
         example_scope = """# ENCRYPTED CREW - NIGHTHAWK Scope Configuration
 # Define authorized targets for ethical security assessment
+name: default_scope
 
 # Authorized domains
 domains:
@@ -371,19 +372,16 @@ repositories:
   - https://github.com/yourusername/your-repo
 
 # Authorized assessment modules
-modules:
+allowed_modules:
   - web
   - network
   - secrets
   - technology
   - dns
 
-# Assessment metadata
-metadata:
-  project: "Security Assessment"
-  authorized_by: "Security Team"
-  date: "2026-09-02"
-  scope_type: "External"
+# Optional rate caps
+rate_limits:
+  requests_per_second: 5
 """
         Path(file).write_text(example_scope, encoding="utf-8")
         print_success(console, f"Created example scope file: {file}")

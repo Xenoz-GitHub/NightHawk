@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Severity(str, Enum):
@@ -121,7 +121,9 @@ class NetworkScanResult(BaseModel):
 class ScopeConfig(BaseModel):
     """Authorized assessment scope."""
 
-    name: str
+    model_config = ConfigDict(extra="ignore")
+
+    name: str = "default_scope"
     domains: list[str] = Field(default_factory=list)
     ips: list[str] = Field(default_factory=list)
     cidrs: list[str] = Field(default_factory=list)
