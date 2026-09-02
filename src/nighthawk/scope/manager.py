@@ -22,7 +22,21 @@ class ScopeManager:
 
     def _load(self) -> ScopeConfig:
         if not self.config_path.exists():
-            raise ConfigurationError(f"Scope file not found: {self.config_path}")
+            # Auto-create a safe default scope for first-time users
+            default_data = {
+                "name": "default_lab",
+                "domains": ["localhost", "127.0.0.1"],
+                "ips": ["127.0.0.1"],
+                "cidrs": ["127.0.0.0/8"],
+                "urls": ["http://localhost"],
+                "repositories": ["."],
+                "allowed_modules": [
+                    "dns", "http", "tls", "technology", "service_enumeration", "secret_scanning"
+                ],
+                "rate_limits": {"requests_per_second": 5},
+            }
+            self.config_path.write_text(yaml.safe_dump(default_data, default_flow_style=False))
+            logger.info("scope_default_created", path=str(self.config_path))
         try:
             data = yaml.safe_load(self.config_path.read_text()) or {}
             return ScopeConfig(**data)
