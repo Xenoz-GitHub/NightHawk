@@ -1,0 +1,11 @@
+name: nginx
+category: web_server
+indicators:
+  - type: header
+    header: "Server"
+    pattern: "nginx"
+    weight: 0.9
+  - type: header
+    header: "X-Powered-By"
+    pattern: "nginx"
+    weight: 0.4

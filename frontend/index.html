@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIGHTHAWK — Attack Surface Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0b0d10',
+            surface: '#111318',
+            panel: '#161922',
+            border: '#23262f',
+            cyan: '#2ec4d6',
+            emerald: '#2ecc71',
+            amber: '#f1a23a',
+            crimson: '#e74c3c',
+            lavender: '#a78bfa',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0b0d10; color: #e6e8eb; }
+    ::selection { background: rgba(46,196,214,0.2); color: #fff; }
+    .glass { background: rgba(22,25,34,0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen">
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

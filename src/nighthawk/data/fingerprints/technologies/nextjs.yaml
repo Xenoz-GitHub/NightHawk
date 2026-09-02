@@ -1,0 +1,12 @@
+name: Next.js
+category: frontend_framework
+indicators:
+  - type: html
+    pattern: "__NEXT_DATA__"
+    weight: 0.7
+  - type: path
+    pattern: "/_next/static/"
+    weight: 0.9
+  - type: cookie
+    pattern: "__next"
+    weight: 0.6

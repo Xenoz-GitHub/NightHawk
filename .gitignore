@@ -1,0 +1,36 @@
+# Build artifacts
+build/
+dist/
+__pycache__/
+*.egg-info/
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.venv/
+venv/
+
+# Database
+*.db
+*.sqlite3
+
+# Reports
+reports/
+*.json
+*.pdf
+
+# Editor
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
