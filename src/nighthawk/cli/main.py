@@ -682,9 +682,10 @@ def tech(
             engine = FingerprintEngine()
             evidence = {
                 "headers": web_result.get("headers", {}),
-                "html_text": web_result.get("content_type", ""),
+                "html_text": web_result.get("html_text") or web_result.get("body") or web_result.get("content_type", ""),
                 "cookies": web_result.get("cookies", []),
                 "paths": [url],
+                "scripts": [],
             }
             matches = engine.match_technology(evidence)
         
@@ -1236,6 +1237,292 @@ def report(
     except Exception as exc:
         print_error(console, f"Report generation failed: {exc}")
         raise typer.Exit(1)
+
+
+@app.command()
+def game_start() -> None:
+    """Start the hacking simulation game."""
+    from nighthawk.game.engine import GameEngine
+    from rich.prompt import Prompt, Confirm
+    import time
+    
+    console.clear()
+    print_banner(console, __version__)
+    console.print()
+    
+    engine = GameEngine()
+    
+    # Check for existing saves
+    save_slots = engine.get_save_slots()
+    existing_saves = [slot for slot, info in save_slots.items() if info is not None]
+    
+    if existing_saves:
+        console.print(Panel.fit(
+            "[bold cyan]🎮 Welcome Back, Operative[/bold cyan]\n"
+            "[yellow]Continue Your Mission or Start Fresh[/yellow]",
+            border_style="cyan"
+        ))
+        console.print()
+        
+        choice = Prompt.ask(
+            "[cyan]Choose option[/cyan]",
+            choices=["new", "load", "exit"],
+            default="load"
+        )
+        
+        if choice == "exit":
+            return
+        elif choice == "load":
+            slot = int(Prompt.ask("[cyan]Select save slot[/cyan]", choices=["1", "2", "3"]))
+            success = engine.load_game(slot)
+            if success:
+                print_success(console, "✓ Game loaded successfully!")
+                console.print()
+                _show_game_dashboard(engine)
+            return
+    
+    # New game
+    console.print(Panel.fit(
+        "[bold green]🎮 NEW GAME[/bold green]\n"
+        "[yellow]Begin Your Journey Into the Shadows[/yellow]",
+        border_style="green"
+    ))
+    console.print()
+    
+    # Typing effect
+    for line in ["⚡ INITIALIZING NIGHTHAWK SYSTEM...", "⚡ ESTABLISHING SECURE CONNECTION...", "⚡ LOADING NEURAL NETWORK..."]:
+        console.print(f"[green]{line}[/green]")
+        time.sleep(0.3)
+    console.print("[bold green]✓ SYSTEM READY[/bold green]")
+    console.print()
+    
+    # Get username
+    username = Prompt.ask("[cyan]Enter your hacker alias[/cyan]", default="Anonymous")
+    
+    # Initialize game
+    success = engine.initialize_new_game(username)
+    
+    if not success:
+        print_error(console, "Failed to initialize game!")
+        return
+    
+    print_success(console, f"✓ Profile created: {username}")
+    console.print()
+    
+    # Team selection
+    _team_selection(engine)
+
+
+def _team_selection(engine: "GameEngine") -> None:
+    """Handle team selection."""
+    from rich.prompt import Prompt, Confirm
+    from nighthawk.game.team_selection import TeamDatabase, TeamRole
+    
+    console.print("""
+[red bold]
+    ██████╗ ███████╗██████╗     ████████╗███████╗ █████╗ ███╗   ███╗
+    ██╔══██╗██╔════╝██╔══██╗    ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║
+    ██████╔╝█████╗  ██║  ██║       ██║   █████╗  ███████║██╔████╔██║
+    ██╔══██╗██╔══╝  ██║  ██║       ██║   ██╔══╝  ██╔══██║██║╚██╔╝██║
+    ██║  ██║███████╗██████╔╝       ██║   ███████╗██║  ██║██║ ╚═╝ ██║
+    ╚═╝  ╚═╝╚══════╝╚═════╝        ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝
+[/red bold]
+                                      [red]VS[/red]
+[cyan bold]
+    ██████╗ ██╗     ██╗   ██╗███████╗    ████████╗███████╗ █████╗ ███╗   ███╗
+    ██╔══██╗██║     ██║   ██║██╔════╝    ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║
+    ██████╔╝██║     ██║   ██║█████╗         ██║   █████╗  ███████║██╔████╔██║
+    ██╔══██╗██║     ██║   ██║██╔══╝         ██║   ██╔══╝  ██╔══██║██║╚██╔╝██║
+    ██████╔╝███████╗╚██████╔╝███████╗       ██║   ███████╗██║  ██║██║ ╚═╝ ██║
+    ╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝       ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝
+[/cyan bold]
+    """, justify="center")
+    
+    console.print()
+    console.print(Panel.fit(
+        "[yellow bold]⚠️  THIS CHOICE IS PERMANENT  ⚠️[/yellow bold]\n"
+        "Choose wisely - your team determines your path, skills, and missions.",
+        border_style="yellow",
+    ))
+    console.print()
+    
+    # Show quick comparison
+    console.print("[red bold]⚔️  RED TEAM[/red bold] - Offensive Security | Break into systems, find exploits")
+    console.print("[cyan bold]🛡️  BLUE TEAM[/cyan bold] - Defensive Security | Defend systems, detect threats")
+    console.print()
+    
+    choice = Prompt.ask(
+        "[bold cyan]Select your team[/bold cyan]",
+        choices=["red", "blue"],
+        default="red"
+    )
+    
+    team_name = "Red Team (Offensive)" if choice == "red" else "Blue Team (Defensive)"
+    confirm = Confirm.ask(f"[yellow]Confirm selection: {team_name}?[/yellow]")
+    
+    if not confirm:
+        print_info(console, "Selection cancelled.")
+        return
+    
+    # Select team
+    success = engine.select_team(choice)
+    
+    if success:
+        team_info = TeamDatabase.get_team_info(TeamRole(choice))
+        
+        console.print()
+        if choice == "red":
+            console.print(Panel.fit(
+                f"[red bold]⚔️  WELCOME TO RED TEAM  ⚔️[/red bold]\n\n"
+                f"[white]{team_info.motto}[/white]\n\n"
+                f"[green]Starting Tools Unlocked:[/green]\n" +
+                "\n".join(f"  ✓ {tool}" for tool in team_info.starting_tools),
+                border_style="red",
+            ))
+        else:
+            console.print(Panel.fit(
+                f"[cyan bold]🛡️  WELCOME TO BLUE TEAM  🛡️[/cyan bold]\n\n"
+                f"[white]{team_info.motto}[/white]\n\n"
+                f"[green]Starting Tools Unlocked:[/green]\n" +
+                "\n".join(f"  ✓ {tool}" for tool in team_info.starting_tools),
+                border_style="cyan",
+            ))
+        
+        print_success(console, "\n✓ Team selection complete!")
+
+
+# ========== Bounty System Commands ==========
+
+@app.command()
+def game_bounties(
+    level: int = typer.Option(1, "--level", "-l", help="Player level for mission filtering"),
+) -> None:
+    """💰 Display the bounty board with available missions."""
+    from nighthawk.cli.bounty_commands import show_bounty_board
+    show_bounty_board(level)
+
+
+@app.command()
+def game_accept_mission(
+    mission_number: int = typer.Argument(..., help="Mission number to accept"),
+    player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
+    level: int = typer.Option(1, "--level", "-l", help="Player level"),
+) -> None:
+    """✅ Accept a mission from the bounty board."""
+    from nighthawk.cli.bounty_commands import accept_mission
+    accept_mission(mission_number, player_id, level)
+
+
+@app.command()
+def game_mission_list(
+    difficulty: str = typer.Option(None, "--difficulty", "-d", 
+                                   help="Filter by difficulty (easy, medium, hard, expert, legendary)"),
+    level: int = typer.Option(1, "--level", "-l", help="Player level"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Maximum missions to show"),
+) -> None:
+    """📋 List available missions with filtering."""
+    from nighthawk.cli.bounty_commands import list_missions
+    list_missions(difficulty, level, limit)
+
+
+@app.command()
+def game_mission_info(
+    mission_number: int = typer.Argument(..., help="Mission number to view details"),
+    level: int = typer.Option(1, "--level", "-l", help="Player level"),
+) -> None:
+    """🔍 View detailed information about a specific mission."""
+    from nighthawk.cli.bounty_commands import mission_info
+    mission_info(mission_number, level)
+
+
+@app.command()
+def game_active_missions(
+    player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
+) -> None:
+    """🎯 Show your active missions."""
+    from nighthawk.cli.bounty_commands import show_active_missions
+    show_active_missions(player_id)
+
+
+@app.command()
+def game_complete_mission(
+    mission_number: int = typer.Argument(..., help="Mission number to complete"),
+    level: int = typer.Option(1, "--level", "-l", help="Player level"),
+) -> None:
+    """✨ Complete an active mission."""
+    from nighthawk.cli.bounty_commands import complete_mission
+    complete_mission(mission_number, level)
+
+
+@app.command()
+def game_mission_history(
+    player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
+) -> None:
+    """📜 Show your completed mission history."""
+    from nighthawk.cli.bounty_commands import show_mission_history
+    show_mission_history(player_id)
+
+
+@app.command()
+def game_bounty_stats() -> None:
+    """📊 Display bounty system statistics."""
+    from nighthawk.cli.bounty_commands import show_bounty_stats
+    show_bounty_stats()
+
+
+@app.command()
+def game_refresh_bounties(
+    level: int = typer.Option(1, "--level", "-l", help="Player level"),
+) -> None:
+    """🔄 Refresh bounty board with new missions."""
+    from nighthawk.cli.bounty_commands import refresh_bounty_board
+    refresh_bounty_board(level)
+
+
+@app.command()
+def game_clients() -> None:
+    """👥 Display information about all bounty clients."""
+    from nighthawk.cli.bounty_commands import list_clients
+    list_clients()
+
+
+def _show_game_dashboard(engine: "GameEngine") -> None:
+    """Show game dashboard."""
+    state = engine.get_game_state()
+    profile = engine.player.get_profile()
+    
+    team_icon = "⚔️" if profile.team.value == "red" else "🛡️"
+    team_color = "red" if profile.team.value == "red" else "cyan"
+    
+    console.print(Panel.fit(
+        f"[{team_color} bold]{team_icon} {profile.username} - {profile.get_rank_title()} {team_icon}[/{team_color} bold]\n"
+        f"[white]Level {profile.level} {profile.team.value.upper()} Team Operative[/white]",
+        border_style=team_color,
+        title="[bold]🎮 OPERATIVE DASHBOARD[/bold]",
+    ))
+    console.print()
+    
+    console.print(f"[cyan]💰 Balance:[/cyan] [yellow bold]₡{state['currency']['balance']:,}[/yellow bold]")
+    console.print(f"[cyan]⭐ Total XP:[/cyan] [yellow bold]{state['player']['xp']:,}[/yellow bold]")
+    console.print(f"[cyan]📈 Next Level:[/cyan] [yellow bold]{state['player']['xp_to_next']:,} XP[/yellow bold]")
+    console.print(f"[cyan]🎯 Missions:[/cyan] [yellow bold]{profile.stats.missions_completed}[/yellow bold]")
+    console.print()
+
+
+@app.command()
+def game_dashboard() -> None:
+    """Show your game progress dashboard."""
+    from nighthawk.game.engine import GameEngine
+    
+    engine = GameEngine()
+    
+    # Try to load last save
+    for slot in [1, 2, 3]:
+        if engine.load_game(slot):
+            _show_game_dashboard(engine)
+            return
+    
+    print_error(console, "No game in progress! Use 'nighthawk game-start' first.")
 
 
 if __name__ == "__main__":
