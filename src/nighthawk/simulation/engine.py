@@ -1,0 +1,204 @@
+"""Simulation engine: deterministic turn orchestration.
+
+The engine never introduces its own randomness into state. Detection rolls
+are seeded from the world-state hash, so two replays of the same action
+sequence — even after a save/load round-trip — produce identical alerts,
+identical event logs, and identical final state hashes.
+
+Turn structure per tick:
+  1. attacker acts (may raise alerts)
+  2. defender acts (investigate / contain / monitor)
+  3. detection roll for any attacker action this tick, then tick increments
+"""
+
+from __future__ import annotations
+
+import random
+
+from nighthawk.simulation.actions import (
+    detection_rolls,
+    spec as action_spec,
+    apply_attacker_action,
+    apply_defender_action,
+)
+from nighthawk.simulation.events import EventLog
+from nighthawk.simulation.models import (
+    ActionKind,
+    DefenderSkill,
+    InformationState,
+    InvalidActionError,
+    WorldState,
+)
+from nighthawk.simulation.objectives import all_primary_complete
+from nighthawk.simulation.scenario import generate_world
+from nighthawk.simulation.scoring import score as score_world
+
+MONITOR_BOOST = 0.15
+
+
+def from_scenario(
+    scenario: str,
+    seed: int,
+    defender: DefenderSkill = DefenderSkill.OPERATOR,
+) -> "SimulationEngine":
+    """Build an engine over a freshly generated deterministic world."""
+    return SimulationEngine(generate_world(scenario, seed, defender))
+
+
+class SimulationEngine:
+    """Runs one deterministic offline simulation run."""
+
+    def __init__(self, world: WorldState, log: EventLog | None = None,
+                 max_ticks: int = 24) -> None:
+        self.world = world
+        self.log = log if log is not None else EventLog()
+        self.max_ticks = max_ticks
+        self.finished = False
+        self.outcome: str | None = None  # completed | time_expired
+        self._monitor_boost = 0.0
+        self._pending_actions: list[dict] = []  # attacker actions this tick
+
+    # ---- introspection ------------------------------------------------- #
+
+    @property
+    def tick(self) -> int:
+        return self.world.tick
+
+    @property
+    def last_seq(self) -> int:
+        return self.log.last_seq
+
+    def state_hash(self) -> str:
+        return self.world.state_hash()
+
+    # ---- snapshot / restore --------------------------------------------- #
+
+    def snapshot(self) -> dict:
+        """Full restore point: world state plus engine bookkeeping."""
+        return {
+            "world": self.world.to_dict(),
+            "events": self.log.to_list(),
+            "finished": self.finished,
+            "outcome": self.outcome,
+            "max_ticks": self.max_ticks,
+        }
+
+    def restore(self, snap: dict) -> None:
+        self.world = WorldState.from_dict(snap["world"])
+        self.log = EventLog.from_list(snap.get("events") or [])
+        self.finished = bool(snap["finished"])
+        self.outcome = snap["outcome"]
+        self.max_ticks = int(snap["max_ticks"])
+        self._monitor_boost = 0.0
+        self._pending_actions = []
+
+    def _require_active(self) -> None:
+        """Reject actions on a finished run without mutating anything."""
+        if self.finished:
+            raise InvalidActionError(
+                f"Run is already finished (outcome: {self.outcome})."
+            )
+
+    # ---- public API ------------------------------------------------------ #
+
+    def attacker_act(self, kind: ActionKind, target: str | None = None) -> dict:
+        """Apply one attacker action. Raises InvalidActionError without mutating."""
+        self._require_active()
+        entry = action_spec(kind)
+        if entry.actor != "attacker":
+            raise InvalidActionError(f"{kind.value} is not an attacker action.")
+        info = apply_attacker_action(self.world, kind, target)
+        self._pending_actions.append(
+            {"kind": kind, "target": target, "tick": self.world.tick}
+        )
+        self._log_action("attacker", info, entry.cost)
+        return info
+
+    def defender_act(self, kind: ActionKind, target: str | None = None) -> dict:
+        """Apply one defender action. Raises InvalidActionError without mutating."""
+        self._require_active()
+        entry = action_spec(kind)
+        if entry.actor != "defender":
+            raise InvalidActionError(f"{kind.value} is not a defender action.")
+        info = apply_defender_action(self.world, kind, target)
+        if kind is ActionKind.MONITOR:
+            self._monitor_boost = MONITOR_BOOST
+        self._log_action("defender", info, entry.cost)
+        return info
+
+    def end_turn(self) -> int:
+        """Run detection for this tick's attacker actions, advance the tick.
+        Returns the tick number just completed."""
+        self._require_active()
+        completed_tick = self.tick_end(self._pending_actions)
+        self._pending_actions = []
+        if self._check_terminal():
+            return completed_tick
+        self.world.tick += 1
+        if self.world.tick >= self.max_ticks:
+            self.finished = True
+            self.outcome = "time_expired"
+            self.log.append(
+                self.world.tick, "world", "run.end",
+                f"Tick budget exhausted; run ends with outcome '{self.outcome}'.",
+            )
+        return completed_tick
+
+    def run_to_completion(self) -> dict:
+        """Drive ticks until a terminal condition; returns the scorecard."""
+        while not self.finished:
+            self.end_turn()
+        return self.score()
+
+    # ---- internals ------------------------------------------------------- #
+
+    def tick_end(self, pending: list[dict]) -> int:
+        """Detection for this tick's attacker actions; returns the tick used."""
+        tick = self.world.tick
+        boost = self._monitor_boost
+        self._monitor_boost = 0.0
+        if pending:
+            kind: ActionKind = pending[0]["kind"]
+            target = pending[0]["target"] or ""
+            rng = random.Random(f"{self.world.state_hash()}")
+            for alert in detection_rolls(self.world, rng, kind, target, tick, boost):
+                self.world.alerts.append(alert)
+                self.log.append(
+                    tick, "world", "alert.raised", alert.description,
+                    {"alert_id": alert.id, "confidence": alert.confidence.value,
+                     "target": alert.target_id},
+                )
+        return tick
+
+    def _log_action(self, actor: str, info: dict, cost: int) -> None:
+        kind_str = info["kind"]
+        tick = self.world.tick
+        target = info["target"]
+        self.log.append(
+            tick, actor, "action.ok",
+            f"{actor} {kind_str}" + (f" {target}" if target else ""),
+            {"kind": kind_str, "target": target,
+             "changed": info.get("changed", [])},
+        )
+        self.world.action_log.append(
+            {"tick": tick, "actor": actor, "kind": kind_str,
+             "target": target, "cost": cost}
+        )
+
+    def _check_terminal(self) -> bool:
+        primaries = [o for o in self.world.objectives if o.is_primary]
+        if primaries and all_primary_complete(self.world):
+            self.finished = True
+            self.outcome = "completed"
+            self.log.append(
+                self.world.tick, "world", "run.complete",
+                "All primary objectives complete.",
+            )
+        return self.finished
+
+    def score(self) -> dict:
+        ticks_used = min(self.world.tick + 1, self.max_ticks)
+        card = score_world(self.world, ticks_used)
+        card["outcome"] = self.outcome
+        card["ticks_used"] = ticks_used
+        return card
