@@ -7,8 +7,8 @@
 ## Quick Start (Global CLI)
 
 ```bash
-# Install globally (like npm i -g opencode-ai)
-pip install .
+# Install from GitHub (any folder — no clone needed for users)
+pip install git+https://github.com/Xenoz-GitHub/NightHawk.git@v1.0.0
 # or with pipx (recommended)
 pipx install .
 

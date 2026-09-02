@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-REPO_URL="https://github.com/Xenoz-GitHub/NightHawk.git"
+REPO_URL="https://github.com/Xenoz-GitHub/NightHawk.git@v1.0.0"
 
 echo "[NIGHTHAWK] Installing globally..."
 

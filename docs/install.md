@@ -2,15 +2,24 @@
 
 NIGHTHAWK installs globally — users never need to clone the repo or stay in the source folder.
 
-## From GitHub (any computer, any folder)
+## From GitHub (any computer, any folder — no clone needed)
 
 ```bash
-# Linux / macOS / Windows (with Python installed)
-pip install git+https://github.com/Xenoz-GitHub/NightHawk.git
+# Using the tag (recommended for stable installs)
+pip install git+https://github.com/Xenoz-GitHub/NightHawk.git@v1.0.0
+
+# Or using the branch directly
+pip install git+https://github.com/Xenoz-GitHub/NightHawk.git@arena/01a05f4e-nighthawk
 
 # Or with pipx (isolated CLI, best practice)
-pipx install git+https://github.com/Xenoz-GitHub/NightHawk.git
+pipx install git+https://github.com/Xenoz-GitHub/NightHawk.git@v1.0.0
 ```
+
+**Note for Windows users:** If `pip install .` says "Neither 'setup.py' nor 'pyproject.toml' found", you are in the wrong folder. Use the GitHub URL above, or clone first:
+
+```cmd
+git clone https://github.com/Xenoz-GitHub/NightHawk.git
+pip install .\NightHawk
 
 After install, `nighthawk` works from any directory:
 ```bash
