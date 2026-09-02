@@ -1,0 +1,21 @@
+name: authorized_lab
+domains:
+  - lab.example
+  - "*.lab.example"
+ips:
+  - 10.10.10.10
+cidrs:
+  - 10.10.20.0/24
+urls:
+  - https://lab.example
+repositories:
+  - ./authorized-project
+allowed_modules:
+  - dns
+  - http
+  - tls
+  - technology
+  - service_enumeration
+  - secret_scanning
+rate_limits:
+  requests_per_second: 5

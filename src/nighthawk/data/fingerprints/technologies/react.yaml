@@ -1,0 +1,12 @@
+name: React
+category: frontend_framework
+indicators:
+  - type: html
+    pattern: "data-reactroot"
+    weight: 0.8
+  - type: script
+    pattern: "react"
+    weight: 0.5
+  - type: cookie
+    pattern: "react"
+    weight: 0.3

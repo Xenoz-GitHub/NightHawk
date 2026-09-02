@@ -1,0 +1,1 @@
+"""NIGHTHAWK FastAPI backend."""

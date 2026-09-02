@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  nighthawk-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: nighthawk-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://nighthawk:nighthawk@postgres:5432/nighthawk
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    depends_on:
+      - postgres
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: nighthawk-postgres
+    environment:
+      POSTGRES_USER: nighthawk
+      POSTGRES_PASSWORD: nighthawk
+      POSTGRES_DB: nighthawk
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  dashboard:
+    image: nginx:alpine
+    container_name: nighthawk-dashboard
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend/build:/usr/share/nginx/html:ro
+    depends_on:
+      - nighthawk-api
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

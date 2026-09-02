@@ -1,0 +1,19 @@
+# Secret detection patterns for NIGHTHAWK
+# Each entry: name, regex, context keywords, entropy_threshold, severity
+patterns:
+  - name: "AWS Access Key"
+    regex: "AKIA[0-9A-Z]{16}"
+    context: ["aws", "access", "key", "secret"]
+    severity: "high"
+  - name: "Generic High-Entropy Secret"
+    regex: "[A-Za-z0-9_-]{20,60}"
+    context: ["token", "secret", "credential", "password", "auth"]
+    severity: "medium"
+  - name: "GitHub Token"
+    regex: "ghp_[A-Za-z0-9]{36}"
+    context: ["github", "token", "auth"]
+    severity: "high"
+  - name: "Slack Token"
+    regex: "xox[baprs]-[0-9]{10,13}-[0-9]{10,13}[a-zA-Z0-9-]*"
+    context: ["slack", "token", "webhook"]
+    severity: "high"
