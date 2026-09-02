@@ -167,3 +167,37 @@ class ScopeConfig(BaseModel):
                 raise ValueError(f"Unsupported module '{item}'. Allowed modules: {valid}")
             normalized.append(canonical)
         return list(dict.fromkeys(normalized))
+
+
+class CampaignStatus(str, Enum):
+    """Campaign lifecycle states.
+
+    Transitions:
+        created  → queued → running → completed
+                           → paused → running ...
+                           → failed (scanner error)
+        any active state → cancelled
+    """
+
+    CREATED = "created"
+    QUEUED = "queued"
+    RUNNING = "running"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class Campaign(BaseModel):
+    """An authorized assessment campaign (domain model)."""
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    name: str
+    scope_path: str | None = None
+    status: CampaignStatus = CampaignStatus.CREATED
+    targets: list[str] = Field(default_factory=list)
+    error: str | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    event_seq: int = 0

@@ -13,26 +13,46 @@ _engine = None
 _session_factory = None
 
 
+def _make_engine(url: str):
+    """Build a SQLAlchemy engine for the given URL (pool only for server DBs)."""
+    return create_engine(
+        url,
+        echo=False,
+        poolclass=pool.QueuePool if url.startswith(("postgresql", "postgres")) else pool.NullPool,
+        future=True,
+    )
+
+
 def init_database() -> None:
     """Initialize the SQLAlchemy engine and session factory from config."""
     global _engine, _session_factory
     cfg = get_config()
     url = cfg.database_url
-    echo = cfg.db_echo
-    pool_size = cfg.db_pool_size
-    max_overflow = cfg.db_max_overflow
     try:
-        _engine = create_engine(
-            url,
-            echo=echo,
-            poolclass=pool.QueuePool if url.startswith("postgresql") else pool.NullPool,
-            pool_size=pool_size,
-            max_overflow=max_overflow,
-            future=True,
-        )
+        _engine = _make_engine(url)
         _session_factory = sessionmaker(bind=_engine, expire_on_commit=False)
     except SQLAlchemyError as exc:
         raise DatabaseError(f"Failed to initialize database: {exc}") from exc
+
+
+def create_all() -> None:
+    """Create all tables if they do not exist (dev/bootstrap convenience)."""
+    global _engine
+    if _engine is None:
+        init_database()
+    Base.metadata.create_all(_engine)
+
+
+def reset_engine() -> None:
+    """Dispose and forget engine + session factory (used by tests)."""
+    global _engine, _session_factory
+    if _engine is not None:
+        try:
+            _engine.dispose()
+        except Exception:  # pragma: no cover - dispose is best-effort
+            pass
+    _engine = None
+    _session_factory = None
 
 
 def get_session():

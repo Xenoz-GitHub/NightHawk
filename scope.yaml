@@ -1,38 +1,15 @@
 name: professional_domain_scope
 domains:
-  - .com
-  - .net
-  - .org
-  - .io
-  - .app
-  - .dev
-  - .site
-  - .xyz
-  - .info
-  - .co
-  - .ai
-  - .me
-  - .cloud
-  - .online
-  - .tech
-  - .shop
-  - .studio
-  - .blog
-  - .agency
-  - .digital
-  - .vercel.app
-  - .netlify.app
-  - .onrender.com
-  - .pages.dev
-  - .gitpod.io
-  - .fly.dev
-  - .azurewebsites.net
-  - .herokuapp.com
-  - .railway.app
-  - .surge.sh
-  - .glitch.me
-  - .repl.co
-  - .github.io
+  - localhost
+  - example.com
+  - example.net
+  - example.org
+ips:
+  - 127.0.0.1
+cidrs:
+  - 127.0.0.0/8
+urls:
+  - http://localhost
 allowed_modules:
   - web
   - dns

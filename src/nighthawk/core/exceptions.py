@@ -49,3 +49,41 @@ class DatabaseError(NightHawkError):
     """Raised for database-level failures."""
 
     pass
+
+
+class CampaignError(NightHawkError):
+    """Base class for campaign lifecycle errors."""
+    pass
+
+
+class CampaignNotFoundError(CampaignError):
+    """Raised when a referenced campaign does not exist."""
+
+    def __init__(self, campaign_id: str) -> None:
+        super().__init__(f"Campaign '{campaign_id}' not found.")
+        self.campaign_id = campaign_id
+
+
+class InvalidStateTransitionError(CampaignError):
+    """Raised when a lifecycle transition is not allowed."""
+
+    def __init__(self, current: str, requested: str) -> None:
+        super().__init__(
+            f"Cannot transition campaign from '{current}' to '{requested}'."
+        )
+        self.current = current
+        self.requested = requested
+
+
+class DuplicateCampaignError(CampaignError):
+    """Raised when creating a campaign with an existing name."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Campaign '{name}' already exists.")
+        self.name = name
+
+
+class ValidationError(NightHawkError):
+    """Raised when user-supplied input fails semantic validation."""
+    pass
+

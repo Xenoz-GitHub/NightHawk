@@ -61,6 +61,8 @@ class WebScanner:
                     result["status_code"] = resp.status_code
                     result["headers"] = dict(resp.headers)
                     result["content_type"] = resp.headers.get("content-type")
+                    result["body"] = resp.text
+                    result["html_text"] = resp.text
                     result["cookies"] = [
                         {"name": c.name, "value": "[REDACTED]", "secure": c.secure, "httponly": c.has_nonstandard_attr("HttpOnly"), "samesite": c.get("SameSite", "none")}
                         for c in resp.cookies.jar

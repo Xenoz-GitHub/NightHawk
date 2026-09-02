@@ -1,13 +1,18 @@
-"""FastAPI application and routes."""
+"""FastAPI application factory with real persistence and event streaming."""
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from __future__ import annotations
+
 from typing import Any
-from datetime import datetime, timezone
-from uuid import uuid4
+
+from fastapi import FastAPI
 
 from nighthawk import __version__
-from nighthawk.config.config import get_config
+from nighthawk.api.errors import register_error_handlers
+from nighthawk.api.routes import router as campaign_router
+from nighthawk.api.ws import router as ws_router
+from nighthawk.logging.setup import configure_logging
+
+configure_logging()
 
 app = FastAPI(
     title="NIGHTHAWK API",
@@ -17,10 +22,9 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-
-class CampaignCreateRequest(BaseModel):
-    name: str = Field(..., min_length=1, max_length=128)
-    scope_path: str | None = None
+app.include_router(campaign_router)
+app.include_router(ws_router)
+register_error_handlers(app)
 
 
 @app.get("/health")
@@ -37,38 +41,3 @@ async def root() -> dict[str, Any]:
         "docs": "/docs",
     }
 
-
-@app.post("/api/v1/campaigns")
-async def create_campaign(req: CampaignCreateRequest) -> dict[str, Any]:
-    return {
-        "id": str(uuid4()),
-        "name": req.name,
-        "scope_path": req.scope_path,
-        "status": "created",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-
-@app.get("/api/v1/campaigns/{id}")
-async def get_campaign(id: str) -> dict[str, Any]:
-    return {
-        "id": id,
-        "status": "running",
-        "findings_count": 0,
-        "assets_count": 0,
-    }
-
-
-@app.get("/api/v1/findings")
-async def list_findings() -> list[dict[str, Any]]:
-    return []
-
-
-@app.get("/api/v1/assets")
-async def list_assets() -> list[dict[str, Any]]:
-    return []
-
-
-@app.get("/api/v1/graph")
-async def get_graph() -> dict[str, Any]:
-    return {"nodes": [], "edges": [], "message": "Graph data requires assessment data."}

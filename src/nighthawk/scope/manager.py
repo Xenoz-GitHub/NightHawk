@@ -69,6 +69,11 @@ class ScopeManager:
             # URL check
             if target.startswith(("http://", "https://")):
                 url = self._normalize_url(target)
+                hostname = urlparse(url).hostname or ""
+
+                if self._domain_is_authorized(hostname):
+                    return True
+
                 for allowed in self.config.urls:
                     allowed_url = self._normalize_url(allowed)
                     if not allowed_url:
@@ -126,12 +131,12 @@ class ScopeManager:
         target = (target or "").strip().lower().rstrip(".")
         if not target:
             return False
-        host = target.split(":", 1)[0].split("/", 1)[0]
+        host = target.split(":", 1)[0].split("/", 1)[0].lstrip(".")
         for allowed in self.config.domains:
             allowed_value = str(allowed).strip().lower().rstrip(".")
             if not allowed_value:
                 continue
-            allowed_host = allowed_value.split(":", 1)[0].split("/", 1)[0]
+            allowed_host = allowed_value.split(":", 1)[0].split("/", 1)[0].lstrip(".")
             if allowed_host.startswith("*."):
                 suffix = allowed_host[2:]
                 if host == suffix or host.endswith("." + suffix):
