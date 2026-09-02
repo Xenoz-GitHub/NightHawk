@@ -40,6 +40,11 @@ class NightHawkConfig(BaseSettings):
     redact_secrets: bool = True
     redact_reports: bool = True
 
+    # API auth / CORS (Phase 8 hardening). When `api_token` is set, every
+    # /api/v1 route requires `Authorization: Bearer <token>`.
+    api_token: str | None = None
+    cors_origins: str = ""  # comma-separated allowed origins; empty = CORS off
+
     # Platform
     platform: str = Field(default="linux", pattern=r"^(linux|windows|darwin)$")
 

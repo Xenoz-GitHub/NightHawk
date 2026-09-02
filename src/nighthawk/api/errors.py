@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from nighthawk.config.config import get_config
 from nighthawk.core.exceptions import (
     CampaignNotFoundError,
     ConfigurationError,
@@ -17,6 +18,9 @@ from nighthawk.core.exceptions import (
     ScopeViolationError,
     ValidationError,
 )
+from nighthawk.logging.setup import get_logger
+
+logger = get_logger("api.errors")
 
 
 def _error(
@@ -78,3 +82,10 @@ def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         return _error(exc.status_code, "http_error", str(exc.detail))
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception):
+        """Last-resort 500: never leak internals. Detailed only in debug."""
+        logger.exception("unhandled_api_error", path=request.url.path)
+        detail = str(exc) if get_config().api_debug else "Internal server error."
+        return _error(500, "internal_error", detail)

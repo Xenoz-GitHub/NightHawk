@@ -7,13 +7,16 @@ services:
       dockerfile: docker/Dockerfile
     container_name: nighthawk-api
     ports:
-      - "8000:8000"
+      - "${NIGHTHAWK_API_PORT:-8000}:8000"
     environment:
-      - DATABASE_URL=postgresql://nighthawk:nighthawk@postgres:5432/nighthawk
+      - NIGHTHAWK_DATABASE_URL=postgresql://${NIGHTHAWK_DB_USER:-nighthawk}:${NIGHTHAWK_DB_PASSWORD:-nighthawk}@postgres:5432/${NIGHTHAWK_DB_NAME:-nighthawk}
+      - NIGHTHAWK_API_TOKEN=${NIGHTHAWK_API_TOKEN:-}
+      - NIGHTHAWK_CORS_ORIGINS=${NIGHTHAWK_CORS_ORIGINS:-}
       - API_HOST=0.0.0.0
       - API_PORT=8000
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -22,11 +25,20 @@ services:
     image: postgres:16-alpine
     container_name: nighthawk-postgres
     environment:
-      POSTGRES_USER: nighthawk
-      POSTGRES_PASSWORD: nighthawk
-      POSTGRES_DB: nighthawk
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${NIGHTHAWK_DB_USER:-nighthawk}
+      POSTGRES_PASSWORD: ${NIGHTHAWK_DB_PASSWORD:-nighthawk}
+      POSTGRES_DB: ${NIGHTHAWK_DB_NAME:-nighthawk}
+    # Not published to the host by default — only reachable on the compose
+    # network. Uncomment to expose for external tooling.
+    # ports:
+    #   - "5432:5432"
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${NIGHTHAWK_DB_USER:-nighthawk} -d ${NIGHTHAWK_DB_NAME:-nighthawk}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -35,7 +47,7 @@ services:
     image: nginx:alpine
     container_name: nighthawk-dashboard
     ports:
-      - "3000:80"
+      - "${NIGHTHAWK_DASHBOARD_PORT:-3000}:80"
     volumes:
       - ./frontend/build:/usr/share/nginx/html:ro
     depends_on:
