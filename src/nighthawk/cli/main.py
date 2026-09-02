@@ -4,10 +4,18 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from pathlib import Path
 
 from nighthawk import __version__
 
 console = Console()
+
+def version_callback(value: bool) -> None:
+    if value:
+        console.print(f"[bold cyan]NIGHTHAWK[/bold cyan] v{__version__}")
+        console.print("Ethical red-team reconnaissance, attack-surface discovery, and exposure-assessment platform.")
+        raise typer.Exit()
+
 app = typer.Typer(
     name="nighthawk",
     help="NIGHTHAWK — Ethical Red-Team Reconnaissance & Attack-Surface Assessment",
@@ -16,15 +24,20 @@ app = typer.Typer(
 )
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main_callback(
-    version: bool = typer.Option(False, "--version", help="Show version and exit."),
+    version: bool = typer.Option(
+        False,
+        "--version",
+        is_eager=True,
+        callback=version_callback,
+        help="Show version and exit.",
+    ),
 ) -> None:
     """NIGHTHAWK CLI."""
-    if version:
-        console.print(f"[bold cyan]NIGHTHAWK[/bold cyan] v{__version__}")
-        console.print("Ethical red-team reconnaissance platform.")
-        raise typer.Exit()
+    if not version:
+        # When no subcommand given and no --version, show help naturally
+        pass
 
 
 @app.command()
@@ -49,13 +62,20 @@ def scope(
 @app.command()
 def discover(
     target: str = typer.Argument("...", help="IP, CIDR, or hostname to discover."),
+    scope_file: str = typer.Option("scope.yaml", "--scope", "-s", help="Scope configuration file."),
 ) -> None:
     """Discover authorized network assets."""
     from nighthawk.scope.manager import ScopeManager
     from nighthawk.network.scanner import NetworkScanner
     import asyncio
     try:
-        scope = ScopeManager("./scope.yaml")
+        scope_path = scope_file if scope_file else "./scope.yaml"
+        if not Path(scope_path).exists():
+            console.print(f"[red]Scope file not found:[/red] {scope_path}")
+            console.print("[yellow]Create a scope.yaml file or specify with --scope")
+            console.print("Example: nighthawk scope --file scope.yaml")
+            raise typer.Exit(1)
+        scope = ScopeManager(scope_path)
         scope.validate_target(target)
         scanner = NetworkScanner()
         result = asyncio.run(scanner.run(target, scope_manager=scope))
@@ -74,13 +94,20 @@ def discover(
 @app.command()
 def web(
     url: str = typer.Argument("...", help="Target URL or domain."),
+    scope_file: str = typer.Option("scope.yaml", "--scope", "-s", help="Scope configuration file."),
 ) -> None:
     """Assess website security and technology fingerprint."""
     from nighthawk.scope.manager import ScopeManager
     from nighthawk.web.scanner import WebScanner
     import asyncio
     try:
-        scope = ScopeManager("./scope.yaml")
+        scope_path = scope_file if scope_file else "./scope.yaml"
+        if not Path(scope_path).exists():
+            console.print(f"[red]Scope file not found:[/red] {scope_path}")
+            console.print("[yellow]Create a scope.yaml file or specify with --scope")
+            console.print("Example: nighthawk scope --file scope.yaml")
+            raise typer.Exit(1)
+        scope = ScopeManager(scope_path)
         scope.validate_target(url)
         scanner = WebScanner()
         result = asyncio.run(scanner.run(url, scope_manager=scope))
@@ -98,6 +125,7 @@ def web(
 @app.command()
 def tech(
     url: str = typer.Argument("...", help="Target URL or domain for technology detection."),
+    scope_file: str = typer.Option("scope.yaml", "--scope", "-s", help="Scope configuration file."),
 ) -> None:
     """Detect website technologies."""
     from nighthawk.scope.manager import ScopeManager
@@ -105,7 +133,13 @@ def tech(
     from nighthawk.technology.scanner import FingerprintEngine
     import asyncio
     try:
-        scope = ScopeManager("./scope.yaml")
+        scope_path = scope_file if scope_file else "./scope.yaml"
+        if not Path(scope_path).exists():
+            console.print(f"[red]Scope file not found:[/red] {scope_path}")
+            console.print("[yellow]Create a scope.yaml file or specify with --scope")
+            console.print("Example: nighthawk scope --file scope.yaml")
+            raise typer.Exit(1)
+        scope = ScopeManager(scope_path)
         scope.validate_target(url)
         scanner = WebScanner()
         web_result = asyncio.run(scanner.run(url, scope_manager=scope))
@@ -138,13 +172,20 @@ def tech(
 @app.command()
 def secrets(
     path: str = typer.Argument(".", help="Path to codebase or repository."),
+    scope_file: str = typer.Option("scope.yaml", "--scope", "-s", help="Scope configuration file."),
 ) -> None:
     """Scan authorized source code for potential secret exposure."""
     from nighthawk.scope.manager import ScopeManager
     from nighthawk.secrets.scanner import SecretScanner
     import asyncio
     try:
-        scope = ScopeManager("./scope.yaml")
+        scope_path = scope_file if scope_file else "./scope.yaml"
+        if not Path(scope_path).exists():
+            console.print(f"[red]Scope file not found:[/red] {scope_path}")
+            console.print("[yellow]Create a scope.yaml file or specify with --scope")
+            console.print("Example: nighthawk scope --file scope.yaml")
+            raise typer.Exit(1)
+        scope = ScopeManager(scope_path)
         scope.validate_target(path)
         scanner = SecretScanner()
         result = asyncio.run(scanner.run(path, scope_manager=scope))
