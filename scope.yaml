@@ -1,21 +1,41 @@
-name: authorized_lab
+name: professional_domain_scope
 domains:
-  - lab.example
-  - "*.lab.example"
-ips:
-  - 10.10.10.10
-cidrs:
-  - 10.10.20.0/24
-urls:
-  - https://lab.example
-repositories:
-  - ./authorized-project
+  - .com
+  - .net
+  - .org
+  - .io
+  - .app
+  - .dev
+  - .site
+  - .xyz
+  - .info
+  - .co
+  - .ai
+  - .me
+  - .cloud
+  - .online
+  - .tech
+  - .shop
+  - .studio
+  - .blog
+  - .agency
+  - .digital
+  - .vercel.app
+  - .netlify.app
+  - .onrender.com
+  - .pages.dev
+  - .gitpod.io
+  - .fly.dev
+  - .azurewebsites.net
+  - .herokuapp.com
+  - .railway.app
+  - .surge.sh
+  - .glitch.me
+  - .repl.co
+  - .github.io
 allowed_modules:
+  - web
   - dns
-  - http
-  - tls
-  - technology
-  - service_enumeration
-  - secret_scanning
+  - tech
 rate_limits:
   requests_per_second: 5
