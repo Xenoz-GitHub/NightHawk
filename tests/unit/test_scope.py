@@ -57,3 +57,29 @@ def test_scope_authorizes_url_with_trailing_slash_and_domain_root(tmp_path):
     manager = ScopeManager(str(scope_file))
     assert manager.is_authorized("https://hyenso-portfolio.vercel.app/")
     assert manager.is_authorized("hyenso-portfolio.vercel.app")
+
+
+def test_scope_authorizes_normalized_url_and_domain_variants(tmp_path):
+    scope_file = tmp_path / "scope.yaml"
+    scope_file.write_text(
+        "name: test\n"
+        "domains:\n"
+        "  - example.com\n"
+        "urls:\n"
+        "  - https://example.com/app\n"
+    )
+    manager = ScopeManager(str(scope_file))
+    assert manager.is_authorized("https://EXAMPLE.com:443/app/")
+    assert manager.is_authorized("https://example.com/app/settings?x=1")
+
+
+def test_scope_rejects_unknown_allowed_modules(tmp_path):
+    scope_file = tmp_path / "scope.yaml"
+    scope_file.write_text(
+        "name: test\n"
+        "allowed_modules:\n"
+        "  - web\n"
+        "  - unknown_module\n"
+    )
+    with pytest.raises(ConfigurationError):
+        ScopeManager(str(scope_file))

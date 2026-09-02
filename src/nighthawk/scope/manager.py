@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 import yaml
 import ipaddress
 
@@ -65,14 +66,24 @@ class ScopeManager:
             if self._is_ip_or_cidr_target(normalized_target):
                 return self._check_ip_scope(normalized_target)
 
-            # Domain check
-            if self._is_domain_target(normalized_target):
-                return self._domain_is_authorized(normalized_target)
-
             # URL check
             if target.startswith(("http://", "https://")):
                 url = self._normalize_url(target)
-                return url in {self._normalize_url(u) for u in self.config.urls}
+                for allowed in self.config.urls:
+                    allowed_url = self._normalize_url(allowed)
+                    if not allowed_url:
+                        continue
+                    if url == allowed_url or url.startswith(allowed_url.rstrip("/") + "/"):
+                        return True
+                    if allowed_url.endswith("/"):
+                        allowed_url = allowed_url.rstrip("/")
+                    if url.startswith(allowed_url) and (allowed_url.count("/") == 2):
+                        return True
+                return False
+
+            # Domain check
+            if self._is_domain_target(normalized_target):
+                return self._domain_is_authorized(normalized_target)
 
             # Repository check
             if Path(target).exists() or target.startswith(("./", "/", ".git")):
@@ -89,25 +100,43 @@ class ScopeManager:
             return target
         if target.startswith(("http://", "https://")):
             return self._normalize_url(target)
-        return target.rstrip("/")
+        return target.strip().rstrip("/")
 
     def _normalize_url(self, url: str) -> str:
-        parsed = url.strip().rstrip("/")
-        if parsed.startswith(("http://", "https://")):
-            return parsed
-        return parsed
+        value = (url or "").strip()
+        if not value:
+            return ""
+        if "://" not in value:
+            value = f"https://{value}"
+        parsed = urlparse(value)
+        hostname = (parsed.hostname or "").lower().rstrip(".")
+        if not hostname:
+            return ""
+        scheme = (parsed.scheme or "https").lower()
+        port = parsed.port
+        if port is not None and ((scheme == "http" and port == 80) or (scheme == "https" and port == 443)):
+            port = None
+        port_part = f":{port}" if port is not None else ""
+        path = parsed.path or "/"
+        if path != "/":
+            path = path.rstrip("/")
+        return f"{scheme}://{hostname}{port_part}{path}"
 
     def _domain_is_authorized(self, target: str) -> bool:
-        target = target.strip().lower().rstrip(".")
+        target = (target or "").strip().lower().rstrip(".")
+        if not target:
+            return False
+        host = target.split(":", 1)[0].split("/", 1)[0]
         for allowed in self.config.domains:
-            allowed = str(allowed).strip().lower().rstrip(".")
-            if not allowed:
+            allowed_value = str(allowed).strip().lower().rstrip(".")
+            if not allowed_value:
                 continue
-            if allowed.startswith("*."):
-                suffix = allowed[2:]
-                if target == suffix or target.endswith("." + suffix):
+            allowed_host = allowed_value.split(":", 1)[0].split("/", 1)[0]
+            if allowed_host.startswith("*."):
+                suffix = allowed_host[2:]
+                if host == suffix or host.endswith("." + suffix):
                     return True
-            if target == allowed or target.endswith("." + allowed) or allowed.endswith("." + target):
+            if host == allowed_host or host.endswith("." + allowed_host) or allowed_host.endswith("." + host):
                 return True
         return False
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -123,6 +123,19 @@ class ScopeConfig(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
+    VALID_MODULES: ClassVar[set[str]] = {
+        "web",
+        "network",
+        "secrets",
+        "tech",
+        "technology",
+        "dns",
+        "http",
+        "tls",
+        "service_enumeration",
+        "secret_scanning",
+    }
+
     name: str = "default_scope"
     domains: list[str] = Field(default_factory=list)
     ips: list[str] = Field(default_factory=list)
@@ -131,3 +144,26 @@ class ScopeConfig(BaseModel):
     repositories: list[str] = Field(default_factory=list)
     allowed_modules: list[str] = Field(default_factory=list)
     rate_limits: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("allowed_modules")
+    @classmethod
+    def validate_allowed_modules(cls, value: list[str]) -> list[str]:
+        normalized: list[str] = []
+        for item in value:
+            module_name = str(item).strip().lower()
+            if not module_name:
+                continue
+            canonical = {
+                "http": "web",
+                "https": "web",
+                "tls": "web",
+                "technology": "tech",
+                "technologies": "tech",
+                "secret_scanning": "secrets",
+                "service_enumeration": "network",
+            }.get(module_name, module_name)
+            if canonical not in cls.VALID_MODULES:
+                valid = ", ".join(sorted(cls.VALID_MODULES))
+                raise ValueError(f"Unsupported module '{item}'. Allowed modules: {valid}")
+            normalized.append(canonical)
+        return list(dict.fromkeys(normalized))

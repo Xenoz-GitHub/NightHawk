@@ -2,42 +2,78 @@
 
 from pathlib import Path
 
-INSTALLED_ROOT = Path(__file__).resolve().parent.parent.parent
+
+def _candidate_roots() -> list[Path]:
+    current = Path(__file__).resolve()
+    package_dir = current.parent.parent
+    project_root = current.parent.parent.parent
+    return [
+        package_dir,
+        project_root,
+        *current.parents,
+        Path.cwd(),
+    ]
 
 
 def get_package_root() -> Path:
-    """Find package installation root."""
-    current = Path(__file__).resolve()
-    package_data = INSTALLED_ROOT / "data"
-    if package_data.exists():
-        return INSTALLED_ROOT
-    for parent in [current, *current.parents]:
-        if (parent / "src").exists() and (parent / "fingerprints").exists():
-            return parent
-        if parent.name == "nighthawk" and (parent.parent / "fingerprints").exists():
-            return parent.parent
-    return INSTALLED_ROOT
+    """Find the project or installed package root that contains bundled data."""
+    for candidate in _candidate_roots():
+        if not candidate.exists():
+            continue
+        for possible in (
+            candidate,
+            candidate / "nighthawk",
+            candidate / "src" / "nighthawk",
+            candidate / "src",
+        ):
+            if possible.exists() and any((possible / folder).exists() for folder in ("fingerprints", "rules", "templates", "data")):
+                return possible
+    return Path(__file__).resolve().parent.parent
 
 
 def get_fingerprint_dir() -> Path:
-    bundled = INSTALLED_ROOT / "data" / "fingerprints" / "technologies"
-    if bundled.exists():
-        return bundled
-    root = get_package_root()
-    return root / "fingerprints" / "technologies"
+    candidates = [
+        Path(__file__).resolve().parent.parent / "data" / "fingerprints" / "technologies",
+        Path(__file__).resolve().parent.parent / "fingerprints" / "technologies",
+        Path(__file__).resolve().parent.parent.parent / "src" / "nighthawk" / "data" / "fingerprints" / "technologies",
+        Path(__file__).resolve().parent.parent.parent / "fingerprints" / "technologies",
+        get_package_root() / "data" / "fingerprints" / "technologies",
+        get_package_root() / "fingerprints" / "technologies",
+        get_package_root() / "src" / "nighthawk" / "data" / "fingerprints" / "technologies",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return get_package_root() / "fingerprints" / "technologies"
 
 
 def get_rules_dir() -> Path:
-    bundled = INSTALLED_ROOT / "data" / "rules"
-    if bundled.exists():
-        return bundled
-    root = get_package_root()
-    return root / "rules"
+    candidates = [
+        Path(__file__).resolve().parent.parent / "data" / "rules",
+        Path(__file__).resolve().parent.parent / "rules",
+        Path(__file__).resolve().parent.parent.parent / "src" / "nighthawk" / "data" / "rules",
+        Path(__file__).resolve().parent.parent.parent / "rules",
+        get_package_root() / "data" / "rules",
+        get_package_root() / "rules",
+        get_package_root() / "src" / "nighthawk" / "data" / "rules",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return get_package_root() / "rules"
 
 
 def get_templates_dir() -> Path:
-    bundled = INSTALLED_ROOT / "data" / "templates"
-    if bundled.exists():
-        return bundled
-    root = get_package_root()
-    return root / "templates"
+    candidates = [
+        Path(__file__).resolve().parent.parent / "data" / "templates",
+        Path(__file__).resolve().parent.parent / "templates",
+        Path(__file__).resolve().parent.parent.parent / "src" / "nighthawk" / "data" / "templates",
+        Path(__file__).resolve().parent.parent.parent / "templates",
+        get_package_root() / "data" / "templates",
+        get_package_root() / "templates",
+        get_package_root() / "src" / "nighthawk" / "data" / "templates",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return get_package_root() / "templates"
