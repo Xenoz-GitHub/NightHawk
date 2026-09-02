@@ -74,15 +74,266 @@ def main_callback(
 def scope(
     file: str = typer.Option("scope.yaml", "--file", "-f", help="Scope configuration file."),
     create: bool = typer.Option(False, "--create", "-c", help="Create example scope.yaml file."),
+    edit: bool = typer.Option(False, "--edit", "-e", help="Edit scope file interactively."),
+    add_domain: str = typer.Option(None, "--add-domain", help="Quick add domain to scope."),
+    add_ip: str = typer.Option(None, "--add-ip", help="Quick add IP to scope."),
+    add_url: str = typer.Option(None, "--add-url", help="Quick add URL to scope."),
+    show: bool = typer.Option(False, "--show", "-s", help="Show scope file contents."),
 ) -> None:
-    """Validate or create scope configuration."""
+    """Validate, create, or edit scope configuration."""
     from nighthawk.scope.manager import ScopeManager
     from nighthawk.core.exceptions import ConfigurationError
+    import yaml
     
     console.print(create_header_panel("Scope Management", "Authorization & Target Configuration"))
     console.print()
     
-    # Create example scope if requested
+    # Show scope file contents
+    if show:
+        scope_path = Path(file)
+        if not scope_path.exists():
+            print_error(console, f"Scope file not found: {file}")
+            raise typer.Exit(1)
+        
+        print_info(console, f"Scope file: {scope_path.absolute()}")
+        console.print()
+        
+        content = scope_path.read_text()
+        from rich.syntax import Syntax
+        syntax = Syntax(content, "yaml", theme="monokai", line_numbers=True)
+        console.print(syntax)
+        raise typer.Exit(0)
+    
+    # Quick add domain/IP/URL
+    if add_domain or add_ip or add_url:
+        scope_path = Path(file)
+        
+        # Create file if it doesn't exist
+        if not scope_path.exists():
+            print_warning(console, f"Scope file not found. Creating: {file}")
+            scope_data = {
+                'domains': [],
+                'ips': [],
+                'cidrs': [],
+                'urls': [],
+                'modules': ['web', 'network', 'secrets', 'technology', 'dns']
+            }
+        else:
+            with open(scope_path, 'r') as f:
+                scope_data = yaml.safe_load(f) or {}
+        
+        # Ensure lists exist
+        if 'domains' not in scope_data:
+            scope_data['domains'] = []
+        if 'ips' not in scope_data:
+            scope_data['ips'] = []
+        if 'urls' not in scope_data:
+            scope_data['urls'] = []
+        
+        # Add the new item
+        if add_domain:
+            if add_domain not in scope_data['domains']:
+                scope_data['domains'].append(add_domain)
+                print_success(console, f"Added domain: {add_domain}")
+            else:
+                print_warning(console, f"Domain already in scope: {add_domain}")
+        
+        if add_ip:
+            if add_ip not in scope_data['ips']:
+                scope_data['ips'].append(add_ip)
+                print_success(console, f"Added IP: {add_ip}")
+            else:
+                print_warning(console, f"IP already in scope: {add_ip}")
+        
+        if add_url:
+            if add_url not in scope_data['urls']:
+                scope_data['urls'].append(add_url)
+                print_success(console, f"Added URL: {add_url}")
+            else:
+                print_warning(console, f"URL already in scope: {add_url}")
+        
+        # Save file
+        with open(scope_path, 'w') as f:
+            yaml.dump(scope_data, f, default_flow_style=False, sort_keys=False)
+        
+        print_success(console, f"Updated scope file: {file}")
+        console.print()
+        print_info(console, "View with: [cyan]nighthawk scope --show[/cyan]")
+        print_info(console, "Validate with: [cyan]nighthawk scope[/cyan]")
+        raise typer.Exit(0)
+    
+    # Interactive edit mode
+    if edit:
+        scope_path = Path(file)
+        
+        if not scope_path.exists():
+            create_new = typer.confirm(f"Scope file not found. Create {file}?", default=True)
+            if create_new:
+                scope_data = {
+                    'domains': [],
+                    'ips': [],
+                    'cidrs': [],
+                    'urls': [],
+                    'modules': ['web', 'network', 'secrets', 'technology', 'dns']
+                }
+                print_success(console, f"Created new scope file: {file}")
+            else:
+                print_info(console, "Operation cancelled")
+                raise typer.Exit(0)
+        else:
+            # Load current scope
+            with open(scope_path, 'r') as f:
+                scope_data = yaml.safe_load(f) or {}
+        
+        # Ensure lists exist
+        for key in ['domains', 'ips', 'cidrs', 'urls']:
+            if key not in scope_data:
+                scope_data[key] = []
+        if 'modules' not in scope_data:
+            scope_data['modules'] = ['web', 'network', 'secrets', 'technology', 'dns']
+        
+        print_info(console, "Interactive Scope Editor - Press Ctrl+C to cancel")
+        console.print()
+        
+        try:
+            while True:
+                console.print("\n[bold cyan]═══ Current Scope ═══[/bold cyan]")
+                console.print(f"  [green]●[/green] Domains: [white]{len(scope_data['domains'])}[/white]")
+                console.print(f"  [green]●[/green] IPs: [white]{len(scope_data['ips'])}[/white]")
+                console.print(f"  [green]●[/green] CIDRs: [white]{len(scope_data['cidrs'])}[/white]")
+                console.print(f"  [green]●[/green] URLs: [white]{len(scope_data['urls'])}[/white]")
+                console.print()
+                
+                console.print("[bold yellow]Options:[/bold yellow]")
+                console.print("  [cyan]1[/cyan] - Add domain        [cyan]5[/cyan] - View all entries")
+                console.print("  [cyan]2[/cyan] - Add IP           [cyan]6[/cyan] - Remove entry")
+                console.print("  [cyan]3[/cyan] - Add CIDR         [cyan]7[/cyan] - [green]Save and exit[/green]")
+                console.print("  [cyan]4[/cyan] - Add URL          [cyan]8[/cyan] - [red]Exit without saving[/red]")
+                console.print()
+                
+                choice = typer.prompt("Choose option", type=str).strip()
+                
+                if choice == "1":
+                    domain = typer.prompt("Enter domain (e.g., example.com or hyenso-portfolio.vercel.app)")
+                    if domain and domain not in scope_data['domains']:
+                        scope_data['domains'].append(domain)
+                        print_success(console, f"Added domain: {domain}")
+                    elif domain:
+                        print_warning(console, "Domain already exists")
+                
+                elif choice == "2":
+                    ip = typer.prompt("Enter IP address (e.g., 192.168.1.1)")
+                    if ip and ip not in scope_data['ips']:
+                        scope_data['ips'].append(ip)
+                        print_success(console, f"Added IP: {ip}")
+                    elif ip:
+                        print_warning(console, "IP already exists")
+                
+                elif choice == "3":
+                    cidr = typer.prompt("Enter CIDR range (e.g., 192.168.1.0/24)")
+                    if cidr and cidr not in scope_data['cidrs']:
+                        scope_data['cidrs'].append(cidr)
+                        print_success(console, f"Added CIDR: {cidr}")
+                    elif cidr:
+                        print_warning(console, "CIDR already exists")
+                
+                elif choice == "4":
+                    url = typer.prompt("Enter URL (e.g., https://example.com)")
+                    if url and url not in scope_data['urls']:
+                        scope_data['urls'].append(url)
+                        print_success(console, f"Added URL: {url}")
+                    elif url:
+                        print_warning(console, "URL already exists")
+                
+                elif choice == "5":
+                    console.print("\n[bold cyan]═══ All Entries ═══[/bold cyan]")
+                    if scope_data['domains']:
+                        console.print("\n[yellow]Domains:[/yellow]")
+                        for i, d in enumerate(scope_data['domains'], 1):
+                            console.print(f"  {i}. [white]{d}[/white]")
+                    if scope_data['ips']:
+                        console.print("\n[yellow]IPs:[/yellow]")
+                        for i, ip in enumerate(scope_data['ips'], 1):
+                            console.print(f"  {i}. [white]{ip}[/white]")
+                    if scope_data['cidrs']:
+                        console.print("\n[yellow]CIDRs:[/yellow]")
+                        for i, c in enumerate(scope_data['cidrs'], 1):
+                            console.print(f"  {i}. [white]{c}[/white]")
+                    if scope_data['urls']:
+                        console.print("\n[yellow]URLs:[/yellow]")
+                        for i, u in enumerate(scope_data['urls'], 1):
+                            console.print(f"  {i}. [white]{u}[/white]")
+                    
+                    if not any([scope_data['domains'], scope_data['ips'], scope_data['cidrs'], scope_data['urls']]):
+                        print_warning(console, "No entries yet. Add some targets!")
+                
+                elif choice == "6":
+                    console.print("\n[yellow]Remove from:[/yellow]")
+                    console.print("  1 - Domains")
+                    console.print("  2 - IPs")
+                    console.print("  3 - CIDRs")
+                    console.print("  4 - URLs")
+                    
+                    remove_choice = typer.prompt("Choose category", type=str).strip()
+                    
+                    if remove_choice == "1" and scope_data['domains']:
+                        for i, d in enumerate(scope_data['domains'], 1):
+                            console.print(f"  {i}. {d}")
+                        idx = typer.prompt("Enter number to remove", type=int)
+                        if 1 <= idx <= len(scope_data['domains']):
+                            removed = scope_data['domains'].pop(idx - 1)
+                            print_success(console, f"Removed: {removed}")
+                    
+                    elif remove_choice == "2" and scope_data['ips']:
+                        for i, ip in enumerate(scope_data['ips'], 1):
+                            console.print(f"  {i}. {ip}")
+                        idx = typer.prompt("Enter number to remove", type=int)
+                        if 1 <= idx <= len(scope_data['ips']):
+                            removed = scope_data['ips'].pop(idx - 1)
+                            print_success(console, f"Removed: {removed}")
+                    
+                    elif remove_choice == "3" and scope_data['cidrs']:
+                        for i, c in enumerate(scope_data['cidrs'], 1):
+                            console.print(f"  {i}. {c}")
+                        idx = typer.prompt("Enter number to remove", type=int)
+                        if 1 <= idx <= len(scope_data['cidrs']):
+                            removed = scope_data['cidrs'].pop(idx - 1)
+                            print_success(console, f"Removed: {removed}")
+                    
+                    elif remove_choice == "4" and scope_data['urls']:
+                        for i, u in enumerate(scope_data['urls'], 1):
+                            console.print(f"  {i}. {u}")
+                        idx = typer.prompt("Enter number to remove", type=int)
+                        if 1 <= idx <= len(scope_data['urls']):
+                            removed = scope_data['urls'].pop(idx - 1)
+                            print_success(console, f"Removed: {removed}")
+                    else:
+                        print_warning(console, "No entries in that category")
+                
+                elif choice == "7":
+                    # Save and exit
+                    with open(scope_path, 'w') as f:
+                        yaml.dump(scope_data, f, default_flow_style=False, sort_keys=False)
+                    console.print()
+                    print_success(console, f"Saved scope to: {file}")
+                    print_info(console, f"Total entries: {len(scope_data['domains']) + len(scope_data['ips']) + len(scope_data['cidrs']) + len(scope_data['urls'])}")
+                    break
+                
+                elif choice == "8":
+                    console.print()
+                    print_info(console, "Exited without saving")
+                    break
+                
+                else:
+                    print_warning(console, "Invalid option. Please choose 1-8.")
+        
+        except KeyboardInterrupt:
+            console.print("\n")
+            print_warning(console, "Cancelled by user")
+        
+        raise typer.Exit(0)
+    
+    # Create example scope
     if create:
         if Path(file).exists():
             print_warning(console, f"File already exists: {file}")
