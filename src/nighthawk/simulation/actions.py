@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from nighthawk.simulation.models import (
     ActionKind,
+    DefensiveControlKind,
     HostRole,
     InformationState,
     InvalidActionError,
@@ -105,6 +106,49 @@ def _reachable(world: WorldState, from_host_id: str | None) -> set[str]:
     return linked
 
 
+# Base detection probability curves: DefensiveControlKind × ActionKind.
+# A control only rolls detection for actions in its `detects` list; the curve
+# gives the base probability before control strength and monitor boosts.
+DETECTION_CURVES: dict[DefensiveControlKind, dict[ActionKind, float]] = {
+    DefensiveControlKind.EDR: {
+        ActionKind.ENUMERATE: 0.20,
+        ActionKind.COLLECT_EVIDENCE: 0.55,
+        ActionKind.MOVE_TO: 0.30,
+        ActionKind.ANALYZE: 0.25,
+    },
+    DefensiveControlKind.SIEM: {
+        ActionKind.DISCOVER: 0.20,
+        ActionKind.ENUMERATE: 0.35,
+        ActionKind.FINGERPRINT: 0.15,
+        ActionKind.COLLECT_EVIDENCE: 0.30,
+    },
+    DefensiveControlKind.NDR: {
+        ActionKind.ENUMERATE: 0.25,
+        ActionKind.MOVE_TO: 0.35,
+        ActionKind.COLLECT_EVIDENCE: 0.20,
+    },
+    DefensiveControlKind.PATCH_MANAGEMENT: {
+        ActionKind.FINGERPRINT: 0.10,
+        ActionKind.ANALYZE: 0.05,
+    },
+    DefensiveControlKind.MFA: {
+        ActionKind.ANALYZE: 0.15,
+        ActionKind.COLLECT_EVIDENCE: 0.10,
+        ActionKind.ENUMERATE: 0.05,
+    },
+    DefensiveControlKind.SEGMENTATION: {
+        ActionKind.MOVE_TO: 0.40,
+        ActionKind.DISCOVER: 0.10,
+    },
+    DefensiveControlKind.BACKUPS: {},
+}
+
+
+def detection_curve(control_kind: DefensiveControlKind, action: ActionKind) -> float:
+    """Base detection probability for one control kind and attacker action."""
+    return DETECTION_CURVES.get(control_kind, {}).get(action, 0.0)
+
+
 def _controls_detecting(world: WorldState, kind: ActionKind) -> list[float]:
     return [c.strength for c in world.controls if kind in c.detects]
 
@@ -115,8 +159,11 @@ def detection_rolls(
 ) -> list[SimAlert]:
     """Roll detection for an attacker action; returns any new alerts."""
     alerts: list[SimAlert] = []
-    for strength in _controls_detecting(world, kind):
-        chance = min(0.95, strength * NOISE[kind] + monitor_boost)
+    for control in world.controls:
+        if kind not in control.detects:
+            continue
+        base = detection_curve(control.kind, kind) or NOISE.get(kind, 0.0)
+        chance = min(0.95, control.strength * base + monitor_boost)
         if rng.random() < chance:
             alerts.append(SimAlert(
                 id=f"a{len(world.alerts) + len(alerts) + 1}",

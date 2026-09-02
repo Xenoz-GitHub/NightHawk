@@ -21,6 +21,7 @@ from nighthawk.simulation.actions import (
     apply_attacker_action,
     apply_defender_action,
 )
+from nighthawk.simulation.defender import ALERT_DECAY_TICKS, decay_alerts
 from nighthawk.simulation.events import EventLog
 from nighthawk.simulation.models import (
     ActionKind,
@@ -42,14 +43,17 @@ def from_scenario(
     defender: DefenderSkill = DefenderSkill.OPERATOR,
 ) -> "SimulationEngine":
     """Build an engine over a freshly generated deterministic world."""
-    return SimulationEngine(generate_world(scenario, seed, defender))
+    return SimulationEngine(
+        generate_world(scenario, seed, defender), defender=defender,
+    )
 
 
 class SimulationEngine:
     """Runs one deterministic offline simulation run."""
 
     def __init__(self, world: WorldState, log: EventLog | None = None,
-                 max_ticks: int = 24) -> None:
+                 max_ticks: int = 24,
+                 defender: DefenderSkill = DefenderSkill.OPERATOR) -> None:
         self.world = world
         self.log = log if log is not None else EventLog()
         self.max_ticks = max_ticks
@@ -57,6 +61,10 @@ class SimulationEngine:
         self.outcome: str | None = None  # completed | time_expired
         self._monitor_boost = 0.0
         self._pending_actions: list[dict] = []  # attacker actions this tick
+        self._defender = defender
+        self._scenario = world.scenario_id
+        self._seed = world.seed
+        self._checkpoints: list[dict] = []  # undo stack (snapshot dicts)
 
     # ---- introspection ------------------------------------------------- #
 
@@ -130,8 +138,10 @@ class SimulationEngine:
         """Run detection for this tick's attacker actions, advance the tick.
         Returns the tick number just completed."""
         self._require_active()
+        self._push_checkpoint()
         completed_tick = self.tick_end(self._pending_actions)
         self._pending_actions = []
+        self._apply_decay(completed_tick)
         if self._check_terminal():
             return completed_tick
         self.world.tick += 1
@@ -149,6 +159,68 @@ class SimulationEngine:
         while not self.finished:
             self.end_turn()
         return self.score()
+
+    # ---- replay / UX primitives ------------------------------------------ #
+
+    def step(self) -> int:
+        """Advance exactly one tick (alias for end_turn / pause-and-step)."""
+        return self.end_turn()
+
+    def restart(self) -> "SimulationEngine":
+        """Rebuild an identical world from the stored scenario+seed, dropping
+        all progress — the same seed always reproduces the same run."""
+        self.world = generate_world(self._scenario, self._seed, self._defender)
+        self.log = EventLog()
+        self.finished = False
+        self.outcome = None
+        self._monitor_boost = 0.0
+        self._pending_actions = []
+        self._checkpoints = []
+        return self
+
+    def undo(self) -> bool:
+        """Rewind to the start of the previous tick. Returns False when the
+        rewind stack is empty."""
+        if not self._checkpoints:
+            return False
+        self.restore(self._checkpoints.pop())
+        return True
+
+    def replay_events(
+        self, start_seq: int = 1, end_seq: int | None = None,
+    ) -> list[dict]:
+        """Event dicts in the inclusive [start_seq, end_seq] range."""
+        out = []
+        for e in self.log.all():
+            if e.seq < start_seq:
+                continue
+            if end_seq is not None and e.seq > end_seq:
+                break
+            out.append(e.to_dict())
+        return out
+
+    def _push_checkpoint(self) -> None:
+        self._checkpoints.append(self.snapshot())
+        if len(self._checkpoints) > 64:
+            self._checkpoints.pop(0)
+
+    def _apply_decay(self, tick: int) -> list[dict]:
+        """Let unattended alerts age one confidence level; log each change."""
+        changes = decay_alerts(self.world, tick, ALERT_DECAY_TICKS)
+        for change in changes:
+            if change["closed"]:
+                self.log.append(
+                    tick, "world", "alert.decayed",
+                    f"Alert {change['id']} closed after going stale.",
+                    {"alert_id": change["id"], "closed": True},
+                )
+            else:
+                self.log.append(
+                    tick, "world", "alert.decayed",
+                    f"Alert {change['id']} weakened to {change['new']}.",
+                    {"alert_id": change["id"], "new": change["new"]},
+                )
+        return changes
 
     # ---- internals ------------------------------------------------------- #
 
