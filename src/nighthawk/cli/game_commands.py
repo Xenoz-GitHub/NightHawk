@@ -32,10 +32,18 @@ console = Console()
 game_app = typer.Typer(
     name="game",
     help=" Hacking Simulation Game - Red Team vs Blue Team",
+    invoke_without_command=True,
 )
 
 # Global game engine instance
 _game_engine: GameEngine = None
+
+
+@game_app.callback()
+def game_menu(ctx: typer.Context) -> None:
+    """Show the game menu when no game action was selected."""
+    if ctx.invoked_subcommand is None:
+        console.print(ctx.get_help())
 
 
 def get_game_engine() -> GameEngine:

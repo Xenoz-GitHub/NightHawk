@@ -20,7 +20,15 @@ console = Console()
 redteam_app = typer.Typer(
     name="redteam",
     help="Authorized red-team planning, validation, and evidence workflows.",
+    invoke_without_command=True,
 )
+
+
+@redteam_app.callback()
+def redteam_menu(ctx: typer.Context) -> None:
+    """Show the red-team menu when no action was selected."""
+    if ctx.invoked_subcommand is None:
+        console.print(ctx.get_help())
 
 
 def _objective(value: str) -> RedTeamObjective:

@@ -81,3 +81,17 @@ def test_game_commands_are_not_root_commands():
     assert " bounties " not in result.output
     assert " mission-list " not in result.output
     assert " game-start" not in result.output
+
+
+def test_game_menu_without_command_shows_help():
+    result = CliRunner().invoke(app, ["game"])
+    assert result.exit_code == 0, result.output
+    assert "Usage:" in result.output
+    assert "start" in result.output
+
+
+def test_redteam_menu_without_command_shows_help():
+    result = CliRunner().invoke(app, ["redteam"])
+    assert result.exit_code == 0, result.output
+    assert "Usage:" in result.output
+    assert "mission-create" in result.output
