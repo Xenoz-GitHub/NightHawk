@@ -44,11 +44,11 @@ Models (src/nighthawk/models/core.py — Pydantic v2, the canonical domain model
         ▼  (NO mapping layer exists between these and the ORM)
 Persistence (src/nighthawk/database/)
  ├── engine.py   global SQLAlchemy engine/session factory from NightHawkConfig
- │               ⚠ never invoked by CLI or API; no create_all, no Alembic
+ │                never invoked by CLI or API; no create_all, no Alembic
  └── models.py   CampaignDB, FindingDB, AssetDB, ScanResultDB (ORM)
         │
         ▼
-API (src/nighthawk/api/app.py — 74 lines)  ⚠ 100% PLACEHOLDER
+API (src/nighthawk/api/app.py — 74 lines)   100% PLACEHOLDER
  ├── GET  /health                     real
  ├── POST /api/v1/campaigns           returns random UUID, persists nothing
  ├── GET  /api/v1/campaigns/{id}      returns hardcoded {"status": "running", ...}
@@ -64,7 +64,7 @@ Analysis (all currently dead code — defined but never called)
         │
         ▼
 Frontend (frontend/ — no package.json, no build toolchain, no tests)
- └── App.tsx  ⚠ hardcoded MOCK findings/assets; Tailwind + Chart.js via CDN;
+ └── App.tsx   hardcoded MOCK findings/assets; Tailwind + Chart.js via CDN;
               Tailwind classes reference a custom palette defined only in index.html;
               "Attack Surface Graph" panel is a decorative placeholder.
 ```

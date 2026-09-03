@@ -4,13 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## [2.0.0] - 2026-09-02
 
-### 🎨 **ENCRYPTED CREW BRANDING**
+###  **ENCRYPTED CREW BRANDING**
 - Added professional "ENCRYPTED CREW" ASCII art banner
 - Implemented cyberpunk-inspired color scheme (green/cyan/red/yellow)
 - Created Windows-compatible fallback ASCII banners
 - Added unicode detection with automatic fallback for legacy systems
 
-### ✨ **Major Features Added**
+###  **Major Features Added**
 - **User Configuration System**: Complete preferences management
   - Theme customization (colors, banner visibility, emoji usage)
   - Scan configuration (timeouts, threading, rate limiting)
@@ -34,7 +34,7 @@ All notable changes to this project are documented in this file.
   - Helpful suggestions for resolving issues
   - Keyboard interrupt handling (Ctrl+C)
 
-### 🐛 **Critical Bug Fixes**
+###  **Critical Bug Fixes**
 - **Fixed `--version` flag**: No longer requires a command
   - Changed `no_args_is_help=False` in CLI definition
   - Proper version display with full banner
@@ -51,7 +51,7 @@ All notable changes to this project are documented in this file.
   - Clear guidance on creating scope files
   - Option to bypass for testing/development
 
-### 🎯 **UI/UX Improvements**
+###  **UI/UX Improvements**
 
 #### Visual Enhancements
 - Professional header panels for all commands
@@ -67,13 +67,13 @@ All notable changes to this project are documented in this file.
 - **Secret Scanning**: Redacted output, type-based summaries, risk assessment
 - **Assessment Campaigns**: Progress tracking, target-by-target status updates
 
-### 🌍 **Global Compatibility**
+###  **Global Compatibility**
 - **Windows**: Full PowerShell and CMD support, UTF-8 handling, path compatibility
 - **Linux/macOS**: Enhanced with all new features
 - **Cross-platform**: Consistent behavior across operating systems
 - **Terminal Support**: Works with legacy and modern terminals
 
-### 📚 **Documentation**
+###  **Documentation**
 - **README.md**: Comprehensive 500+ line documentation
   - Feature overview with visual elements
   - Complete command reference
@@ -92,14 +92,14 @@ All notable changes to this project are documented in this file.
   - Sensible defaults provided
   - Copy-paste ready for customization
 
-### 🔧 **Technical Improvements**
+###  **Technical Improvements**
 - Pydantic v2 models for configuration
 - Type-safe settings management
 - Modular banner system
 - Improved import structure
 - Better separation of concerns
 
-### 📝 **Configuration Options**
+###  **Configuration Options**
 
 #### Theme
 - Customizable colors for all UI elements
@@ -126,7 +126,7 @@ All notable changes to this project are documented in this file.
 - Log level configuration
 - Default paths and directories
 
-### 🚀 **Command Additions**
+###  **Command Additions**
 ```bash
 nighthawk --version          # Show version with banner
 nighthawk --banner           # Display full ASCII banner
@@ -137,14 +137,14 @@ nighthawk config export      # Export example config
 nighthawk scope --create     # Create scope template
 ```
 
-### 🔒 **Security Enhancements**
+###  **Security Enhancements**
 - Maintained all security boundaries from v1.0.0
 - Added warning indicators for bypassed safety features
 - Enhanced scope validation feedback
 - Default secret redaction in all outputs
 - Ethical usage reminders in banner and docs
 
-### 📊 **Command-Specific Improvements**
+###  **Command-Specific Improvements**
 
 #### `nighthawk scope`
 - Interactive scope creation
@@ -194,20 +194,20 @@ nighthawk scope --create     # Create scope template
 - JSON value parsing
 - Reset with confirmation
 
-### 🔄 **Breaking Changes**
+###  **Breaking Changes**
 - Configuration file format changed to JSON (from YAML if existed)
 - Some CLI flags renamed for consistency
 - Default output format locations changed
 - Minimum Python version clarified (3.11+)
 
-### 📦 **Package Information**
+###  **Package Information**
 - Version: 2.0.0
 - Python: 3.11+
 - Author: ENCRYPTED CREW
 - License: MIT
 - Repository: https://github.com/Xenoz-GitHub/NightHawk
 
-### 🙏 **Credits**
+###  **Credits**
 - Original NightHawk project by Xenoz-GitHub
 - Enhanced and branded by ENCRYPTED CREW
 - Community feedback and testing

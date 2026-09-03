@@ -34,15 +34,6 @@ class BountyBoardUI:
         MissionDifficulty.LEGENDARY: COLORS["cyan"],
     }
     
-    # Client type icons
-    CLIENT_ICONS = {
-        ClientType.SHADOW_BROKER: "🕷️",
-        ClientType.CORPORATE_GUARDIAN: "🏢",
-        ClientType.GRAY_HAT_COLLECTIVE: "⚖️",
-        ClientType.DARK_NET_TRADER: "🕵️",
-        ClientType.WHITE_KNIGHT_SEC: "🛡️",
-    }
-    
     @staticmethod
     def clear_screen():
         """Clear terminal screen."""
@@ -87,13 +78,10 @@ class BountyBoardUI:
         """
         # Mission header with difficulty
         diff_color = BountyBoardUI.DIFFICULTY_COLORS.get(mission.difficulty, BountyBoardUI.COLORS["reset"])
-        status_icon = "✓" if mission.status == MissionStatus.COMPLETED else "→"
-        
         number_str = f"[{number:2d}] " if show_number else ""
-        client_icon = BountyBoardUI.CLIENT_ICONS.get(mission.client.client_type, "🔹")
         
         print(f"{number_str}{diff_color}{mission.difficulty.value.upper():10}{BountyBoardUI.COLORS['reset']} "
-              f"{client_icon} {mission.title}")
+              f"{mission.title}")
         
         # Client info
         print(f"     {BountyBoardUI.COLORS['dim']}Client: {mission.client.name} "
@@ -160,7 +148,7 @@ class BountyBoardUI:
         if mission.constraints:
             print(f"\n{BountyBoardUI.COLORS['bold']}CONSTRAINTS{BountyBoardUI.COLORS['reset']}")
             for constraint in mission.constraints:
-                print(f"  • {constraint}")
+                print(f"  - {constraint}")
         
         # Rewards
         print(f"\n{BountyBoardUI.COLORS['bold']}REWARDS{BountyBoardUI.COLORS['reset']}")
@@ -183,7 +171,7 @@ class BountyBoardUI:
         # Available tools
         print(f"\n{BountyBoardUI.COLORS['bold']}AVAILABLE TOOLS{BountyBoardUI.COLORS['reset']}")
         for tool in mission.tools_available:
-            print(f"  • {tool}")
+            print(f"  - {tool}")
         
         print()
     
@@ -240,7 +228,7 @@ class BountyBoardUI:
         Args:
             mission: Accepted mission
         """
-        print(f"\n{BountyBoardUI.COLORS['green']}{BountyBoardUI.COLORS['bold']}✓ MISSION ACCEPTED{BountyBoardUI.COLORS['reset']}")
+        print(f"\n{BountyBoardUI.COLORS['green']}{BountyBoardUI.COLORS['bold']} MISSION ACCEPTED{BountyBoardUI.COLORS['reset']}")
         print(f"{BountyBoardUI.COLORS['green']}Mission ID: {mission.mission_id}{BountyBoardUI.COLORS['reset']}\n")
     
     @staticmethod
@@ -273,7 +261,7 @@ class BountyBoardUI:
             reputation_tier: New reputation tier
             change: Reputation change amount
         """
-        symbol = "↑" if change > 0 else "↓"
+        symbol = "up" if change > 0 else "down"
         color = BountyBoardUI.COLORS['green'] if change > 0 else BountyBoardUI.COLORS['red']
         
         print(f"\n{color}{symbol} {client_name} Reputation: {reputation_tier.upper()}{BountyBoardUI.COLORS['reset']}")

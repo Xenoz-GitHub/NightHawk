@@ -50,6 +50,48 @@ class TestActionValidation:
             eng.attacker_act(ActionKind.INSPECT, "no-such-host")
         assert eng.state_hash() == before
 
+    def test_action_points_limit_actions_per_turn(self):
+        eng = make_engine()
+        eng.attacker_act(ActionKind.DISCOVER)
+        eng.attacker_act(ActionKind.INSPECT, "h1")
+        before = eng.state_hash()
+        with pytest.raises(InvalidActionError, match="action points"):
+            eng.attacker_act(ActionKind.ENUMERATE, "h1")
+        assert eng.state_hash() == before
+
+    def test_action_points_reset_after_turn(self):
+        eng = make_engine()
+        eng.attacker_act(ActionKind.DISCOVER)
+        eng.attacker_act(ActionKind.INSPECT, "h1")
+        eng.end_turn()
+        eng.attacker_act(ActionKind.ENUMERATE, "h1")
+
+    def test_detection_checks_each_action_in_a_turn(self, monkeypatch):
+        eng = make_engine()
+        calls = []
+
+        def detect(world, rng, kind, target, tick, boost):
+            calls.append((kind, target))
+            return []
+
+        monkeypatch.setattr("nighthawk.simulation.engine.detection_rolls", detect)
+        eng.attacker_act(ActionKind.DISCOVER)
+        eng.attacker_act(ActionKind.INSPECT, "h1")
+        eng.end_turn()
+        assert calls == [
+            (ActionKind.DISCOVER, ""),
+            (ActionKind.INSPECT, "h1"),
+        ]
+
+    def test_undo_restores_action_points(self):
+        eng = make_engine()
+        eng.attacker_act(ActionKind.DISCOVER)
+        eng.end_turn()
+        eng.attacker_act(ActionKind.INSPECT, "h1")
+        eng.end_turn()
+        assert eng.undo()
+        eng.attacker_act(ActionKind.INSPECT, "h1")
+
 
 class TestTurnFlow:
     def test_full_attack_path(self):

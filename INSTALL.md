@@ -2,7 +2,7 @@
 
 Complete installation instructions for Windows, Linux, and macOS.
 
-## 📋 Prerequisites
+##  Prerequisites
 
 ### System Requirements
 - **Operating System**: Windows 10/11, Linux (Ubuntu 20.04+, Debian, etc.), macOS 10.15+
@@ -18,7 +18,7 @@ Complete installation instructions for Windows, Linux, and macOS.
 
 ---
 
-## 🪟 Windows Installation
+##  Windows Installation
 
 ### Method 1: Install from Source (Recommended)
 
@@ -97,7 +97,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ---
 
-## 🐧 Linux Installation
+##  Linux Installation
 
 ### Ubuntu/Debian
 
@@ -173,7 +173,7 @@ pip install -e . -v
 
 ---
 
-## 🍎 macOS Installation
+##  macOS Installation
 
 ### Using Homebrew
 
@@ -226,7 +226,7 @@ xcode-select --install
 
 ---
 
-## 🔧 Post-Installation Setup
+##  Post-Installation Setup
 
 ### 1. Verify Installation
 ```bash
@@ -273,7 +273,7 @@ nighthawk web https://example.com --skip-scope
 
 ---
 
-## 🐳 Docker Installation (Alternative)
+##  Docker Installation (Alternative)
 
 ### Using Provided Dockerfile
 
@@ -303,7 +303,7 @@ nighthawk web https://example.com --skip-scope
 
 ---
 
-## 🔄 Updating
+##  Updating
 
 ### Update from Git
 
@@ -321,7 +321,7 @@ pip install --upgrade git+https://github.com/Xenoz-GitHub/NightHawk.git
 
 ---
 
-## 🗑️ Uninstallation
+##  Uninstallation
 
 ### Remove Package
 
@@ -349,7 +349,7 @@ rm -rf NightHawk
 
 ---
 
-## 📦 Development Installation
+##  Development Installation
 
 For contributing or development:
 
@@ -386,7 +386,7 @@ For contributing or development:
 
 ---
 
-## 🔍 Dependency Information
+##  Dependency Information
 
 ### Core Dependencies
 - typer >= 0.12.5 (CLI framework)
@@ -409,7 +409,7 @@ For contributing or development:
 
 ---
 
-## ❓ Common Installation Issues
+##  Common Installation Issues
 
 ### Issue: "No module named 'nighthawk'"
 
@@ -461,7 +461,7 @@ sudo setcap cap_net_raw+ep $(which python)
 
 ---
 
-## 📞 Getting Help
+##  Getting Help
 
 - **Issues**: https://github.com/Xenoz-GitHub/NightHawk/issues
 - **Discussions**: https://github.com/Xenoz-GitHub/NightHawk/discussions

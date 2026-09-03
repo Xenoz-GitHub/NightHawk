@@ -2,7 +2,7 @@
 
 This guide will get you up and running with NIGHTHAWK in under 5 minutes.
 
-## 🚀 Installation
+##  Installation
 
 ### Option 1: Install from Source (Recommended)
 ```bash
@@ -29,14 +29,14 @@ pipx install git+https://github.com/Xenoz-GitHub/NightHawk.git
 nighthawk --version
 ```
 
-## ✅ Verify Installation
+##  Verify Installation
 
 You should see the ENCRYPTED CREW banner and version information:
 ```
 nighthawk --version
 ```
 
-## 📋 First Steps
+##  First Steps
 
 ### Step 1: Create Scope Configuration
 
@@ -80,7 +80,7 @@ nighthawk scope
 
 You should see a confirmation that your scope is valid.
 
-## 🔍 Basic Usage Examples
+##  Basic Usage Examples
 
 ### Web Security Assessment
 ```bash
@@ -136,7 +136,7 @@ nighthawk assess
 nighthawk assess --modules web,network
 ```
 
-## ⚙️ Configuration
+##  Configuration
 
 ### View Current Configuration
 ```bash
@@ -166,7 +166,7 @@ nighthawk config export --output my-config.json
 nighthawk config reset
 ```
 
-## 🎯 Common Workflows
+##  Common Workflows
 
 ### Workflow 1: Quick Web Assessment
 ```bash
@@ -206,7 +206,7 @@ nighthawk secrets /path/to/code --export secrets-report.json
 # Review findings in the exported JSON
 ```
 
-## 🛡️ Security Best Practices
+##  Security Best Practices
 
 1. **Always Get Authorization**: Never scan systems you don't own or have explicit permission to test
 2. **Use Scope Files**: Define authorized targets in `scope.yaml` before scanning
@@ -214,7 +214,7 @@ nighthawk secrets /path/to/code --export secrets-report.json
 4. **Rate Limiting**: Be respectful of target systems - use appropriate timeouts
 5. **Document Everything**: Keep records of authorization and findings
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Issue: "Scope file not found"
 **Solution**: Create a scope file with `nighthawk scope --create` or use `--skip-scope` flag (not recommended)
@@ -223,7 +223,7 @@ nighthawk secrets /path/to/code --export secrets-report.json
 **Solution**: Update to v2.0.0+ or use `nighthawk --help` to verify installation
 
 ### Issue: "Permission denied" errors
-**Solution**: 
+**Solution**:
 - On Windows: Run as Administrator for network scans
 - On Linux/Mac: Use `sudo` for privileged port scans (< 1024)
 
@@ -241,14 +241,14 @@ pip install -e . --force-reinstall
 # Linux/Mac: ~/.nighthawk/config.json
 ```
 
-## 📚 Next Steps
+##  Next Steps
 
 - Read the full [README.md](README.md) for detailed documentation
 - Check [docs/](docs/) for architecture and plugin development
 - Review example scope files in [examples/](examples/)
 - Join the community and report issues on GitHub
 
-## 🆘 Getting Help
+##  Getting Help
 
 ```bash
 # General help
@@ -263,7 +263,7 @@ nighthawk scope --help
 nighthawk --version
 ```
 
-## ⚡ Quick Reference
+##  Quick Reference
 
 | Command | Purpose |
 |---------|---------|
@@ -285,6 +285,6 @@ nighthawk --version
 
 *Professional Ethical Red-Team Reconnaissance Platform*
 
-🦅 Ready to start? Run: `nighthawk --version`
+ Ready to start? Run: `nighthawk --version`
 
 </div>

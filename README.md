@@ -1,56 +1,56 @@
-# ENCRYPTED CREW - NIGHTHAWK 🦅
+# ENCRYPTED CREW - NIGHTHAWK
 
 ```
-  ███████╗███╗   ██╗ ██████╗██████╗ ██╗   ██╗██████╗ ████████╗███████╗██████╗ 
+  ███████╗███╗   ██╗ ██████╗██████╗ ██╗   ██╗██████╗ ████████╗███████╗██████╗
   ██╔════╝████╗  ██║██╔════╝██╔══██╗╚██╗ ██╔╝██╔══██╗╚══██╔══╝██╔════╝██╔══██╗
   █████╗  ██╔██╗ ██║██║     ██████╔╝ ╚████╔╝ ██████╔╝   ██║   █████╗  ██║  ██║
   ██╔══╝  ██║╚██╗██║██║     ██╔══██╗  ╚██╔╝  ██╔═══╝    ██║   ██╔══╝  ██║  ██║
   ███████╗██║ ╚████║╚██████╗██║  ██║   ██║   ██║        ██║   ███████╗██████╔╝
-  ╚══════╝╚═╝  ╚═══╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝        ╚═╝   ╚══════╝╚═════╝ 
-                                                                                
-   ██████╗██████╗ ███████╗██╗    ██╗                                          
-  ██╔════╝██╔══██╗██╔════╝██║    ██║                                          
-  ██║     ██████╔╝█████╗  ██║ █╗ ██║                                          
-  ██║     ██╔══██╗██╔══╝  ██║███╗██║                                          
-  ╚██████╗██║  ██║███████╗╚███╔███╔╝                                          
-   ╚═════╝╚═╝  ╚═╝╚══════╝ ╚══╝╚══╝                                           
+  ╚══════╝╚═╝  ╚═══╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝        ╚═╝   ╚══════╝╚═════╝
+
+   ██████╗██████╗ ███████╗██╗    ██╗
+  ██╔════╝██╔══██╗██╔════╝██║    ██║
+  ██║     ██████╔╝█████╗  ██║ █╗ ██║
+  ██║     ██╔══██╗██╔══╝  ██║███╗██║
+  ╚██████╗██║  ██║███████╗╚███╔███╔╝
+   ╚═════╝╚═╝  ╚═╝╚══════╝ ╚══╝╚══╝
 
   ════════════════════════════════════════════════════════════════════════════
-  🦅 NIGHTHAWK v2.0.0 | Ethical Red-Team Reconnaissance Platform
-  ⚡ Attack Surface Discovery • Security Assessment • Threat Intelligence
+   NIGHTHAWK v2.0.0 | Ethical Red-Team Reconnaissance Platform
+  Attack Surface Discovery | Security Assessment | Threat Intelligence
   ════════════════════════════════════════════════════════════════════════════
 ```
 
 **Professional Ethical Red-Team Reconnaissance & Attack-Surface Assessment Platform**
 
-> ⚠️ **STRICTLY INTENDED FOR AUTHORIZED USE ONLY**  
+> **STRICTLY INTENDED FOR AUTHORIZED USE ONLY**
 > For systems owned by the user, isolated cybersecurity labs, CTF environments, explicitly authorized penetration tests, and security research environments.
 
 ---
 
-## 🌟 Features
+## Features
 
 ### Core Capabilities
-- 🌐 **Web Security Assessment** - TLS/SSL analysis, security headers, cookie inspection, redirect chain analysis
-- 🔍 **Network Discovery** - Port scanning, service fingerprinting, banner grabbing
-- 🛠️ **Technology Detection** - Framework & CMS identification with confidence scoring
-- 🔐 **Secret Scanning** - Detect exposed API keys, credentials, tokens in source code
-- 📊 **Comprehensive Reporting** - HTML, JSON, CSV export with professional formatting
-- 🎯 **Scope Management** - Mandatory authorization enforcement before any assessment
+- **Web Security Assessment** - TLS/SSL analysis, security headers, cookie inspection, redirect chain analysis
+- **Network Discovery** - Port scanning, service fingerprinting, banner grabbing
+- **Technology Detection** - Framework & CMS identification with confidence scoring
+- **Secret Scanning** - Detect exposed API keys, credentials, tokens in source code
+- **Comprehensive Reporting** - HTML, JSON, CSV export with professional formatting
+- **Scope Management** - Mandatory authorization enforcement before any assessment
 
 ### Enhanced in v2.0.0
-- ✨ **Professional UI/UX** - Cyberpunk-inspired green/cyan/red ethical hacker theme
-- 🎨 **ENCRYPTED CREW Branding** - Custom ASCII art banners and styled output
-- 🔧 **Improved Error Handling** - Better messages, graceful failures, helpful suggestions
-- 🌍 **Global Compatibility** - Enhanced Windows/Linux/macOS support
-- 📝 **Optional Scope Mode** - Can bypass scope validation with `--skip-scope` flag
-- 💾 **Export Options** - Save results to JSON for further analysis
-- ⚡ **Interactive Features** - Progress indicators, status updates, colored output
-- 🐛 **Bug Fixes** - Fixed `--version` flag, scope.yaml requirements, and edge cases
+- **Professional UI/UX** - Cyberpunk-inspired green/cyan/red ethical hacker theme
+- **ENCRYPTED CREW Branding** - Custom ASCII art banners and styled output
+- **Improved Error Handling** - Better messages, graceful failures, helpful suggestions
+- **Global Compatibility** - Enhanced Windows/Linux/macOS support
+- **Optional Scope Mode** - Can bypass scope validation with `--skip-scope` flag
+- **Export Options** - Save results to JSON for further analysis
+- **Interactive Features** - Progress indicators, status updates, colored output
+- **Bug Fixes** - Fixed `--version` flag, scope.yaml requirements, and edge cases
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Installation
 
@@ -116,7 +116,7 @@ nighthawk assess
 
 ---
 
-## 📖 Command Reference
+##  Command Reference
 
 ### Display Banner & Version
 ```bash
@@ -244,28 +244,28 @@ Examples:
 
 ---
 
-## 🎨 Theme & Styling
+##  Theme & Styling
 
 ENCRYPTED CREW NIGHTHAWK features a professional ethical hacker theme:
 
-- **🟢 Green** - Success messages, valid configurations, secure findings
-- **🔵 Cyan** - Information, headers, primary interface elements  
-- **🔴 Red** - Errors, vulnerabilities, critical findings
-- **🟡 Yellow** - Warnings, medium-risk items, suggestions
-- **⚪ White** - Standard text, descriptions
+- **Green** - Success messages, valid configurations, secure findings
+- **Cyan** - Information, headers, primary interface elements
+- **Red** - Errors, vulnerabilities, critical findings
+- **Yellow** - Warnings, medium-risk items, suggestions
+- **White** - Standard text, descriptions
 
 ### Visual Elements
-- ✓ Success indicators
-- ✗ Error indicators
-- ⚠ Warning indicators
-- ℹ Information indicators
-- 🦅 NIGHTHAWK bird icon
-- ⚡ Lightning bolt for features
-- 🔒 Lock for security elements
+- Success indicators
+- Error indicators
+- Warning indicators
+- Information indicators
+- NIGHTHAWK brand mark
+- Feature status labels
+- Security status labels
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Technology Stack
 - **Core**: Python 3.11+
@@ -293,15 +293,15 @@ src/nighthawk/
 
 ---
 
-## 🔒 Security & Ethics
+##  Security & Ethics
 
 ### Security Boundaries
-- ❌ No malware, ransomware, or destructive actions
-- ❌ No credential theft or persistence mechanisms
-- ❌ No unauthorized exploitation or covert surveillance
-- ✅ Mandatory scope validation before execution
-- ✅ Default redaction for secrets in logs
-- ✅ Least-privilege design with safe defaults
+-  No malware, ransomware, or destructive actions
+-  No credential theft or persistence mechanisms
+-  No unauthorized exploitation or covert surveillance
+-  Mandatory scope validation before execution
+-  Default redaction for secrets in logs
+-  Least-privilege design with safe defaults
 
 ### Ethical Usage Guidelines
 1. **Always obtain explicit written authorization** before scanning
@@ -316,7 +316,7 @@ Unauthorized access to computer systems is illegal. This tool is for authorized 
 
 ---
 
-## 🛠️ Development
+##  Development
 
 ### Setup Development Environment
 ```bash
@@ -360,7 +360,7 @@ pytest tests/test_web.py -v
 
 ---
 
-## 📦 Project Structure
+##  Project Structure
 
 ```
 ENCRYPTED-CREW-CHECKING-TOOL/
@@ -385,7 +385,7 @@ ENCRYPTED-CREW-CHECKING-TOOL/
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions welcome! Please:
 1. Fork the repository
@@ -403,13 +403,13 @@ Contributions welcome! Please:
 
 ---
 
-## 📄 License
+##  License
 
 MIT License - See [LICENSE](LICENSE) file for details
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Original NightHawk project by Xenoz-GitHub
 - ENCRYPTED CREW for enhanced features and branding
@@ -418,7 +418,7 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 ---
 
-## 📞 Support & Contact
+##  Support & Contact
 
 - **Issues**: [GitHub Issues](https://github.com/Xenoz-GitHub/NightHawk/issues)
 - **Documentation**: [GitHub Wiki](https://github.com/Xenoz-GitHub/NightHawk/wiki)
@@ -426,7 +426,7 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 ---
 
-## 🚨 Disclaimer
+##  Disclaimer
 
 This tool is provided "as is" without warranty of any kind. Use at your own risk. The authors and contributors are not responsible for any misuse or damage caused by this tool. Always obtain proper authorization before conducting security assessments.
 
@@ -438,6 +438,6 @@ This tool is provided "as is" without warranty of any kind. Use at your own risk
 
 *Professional Ethical Red-Team Reconnaissance Platform*
 
-Made with ❤️ by security researchers, for security researchers
+Made by security researchers, for security researchers
 
 </div>

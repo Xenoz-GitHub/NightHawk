@@ -15,7 +15,7 @@ Transform Nighthawk into a professional terminal-based hacking simulation RPG th
   - Focus: Penetration testing, exploitation, social engineering
   - Tools: Exploit frameworks, payload generators, password crackers
   - Missions: Break into systems, exfiltrate data, maintain persistence
-  
+
 - **Blue Team (Defensive Security)**
   - Focus: Threat detection, incident response, system hardening
   - Tools: IDS/IPS, log analysis, SIEM, patch management
@@ -135,7 +135,7 @@ Transform Nighthawk into a professional terminal-based hacking simulation RPG th
 **Message Format:**
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔒 ENCRYPTED MESSAGE FROM: ShadowBroker
+ ENCRYPTED MESSAGE FROM: ShadowBroker
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Greetings, operative.
@@ -144,7 +144,7 @@ I have a job that requires your particular skills...
 
 TARGET: TechCorp Industries
 OBJECTIVE: Extract confidential project files
-DIFFICULTY: ★★★★☆
+DIFFICULTY:
 DEADLINE: 48 hours
 PAYMENT: ₡25,000 + bonus
 
@@ -210,34 +210,34 @@ Accept mission? (y/n)
 - **Ubuntu Vulnerable Server**
   - OS: Ubuntu 20.04
   - Vulnerabilities: 10+ intentional flaws
-  - Difficulty: ★☆☆☆☆
+  - Difficulty:
 
 - **Windows XP Legacy**
   - OS: Windows XP SP2 (simulated)
   - Vulnerabilities: Unpatched services
-  - Difficulty: ★★☆☆☆
+  - Difficulty:
 
 #### 2. Intermediate VMs
 - **Corporate Web Server**
   - Stack: LAMP/NGINX
   - Vulnerabilities: Web app flaws
-  - Difficulty: ★★★☆☆
+  - Difficulty:
 
 - **Enterprise Domain Controller**
   - OS: Windows Server 2019
   - Vulnerabilities: AD misconfigurations
-  - Difficulty: ★★★★☆
+  - Difficulty:
 
 #### 3. Advanced VMs
 - **Industrial Control System**
   - Type: SCADA simulation
   - Vulnerabilities: ICS-specific
-  - Difficulty: ★★★★★
+  - Difficulty:
 
 - **Hardened Fortress**
   - OS: Security-focused Linux
   - Vulnerabilities: Zero-day required
-  - Difficulty: ★★★★★
+  - Difficulty:
 
 ### VM Features:
 - **Simulated File System**: Navigate directories, read files
@@ -297,7 +297,7 @@ You are recruited by an underground hacker collective to take down corrupt corpo
 ### E-Corp Scenario (Mr. Robot Inspired)
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  🏢 E-CORP SECURITY OPERATIONS CENTER           ┃
+┃   E-CORP SECURITY OPERATIONS CENTER           ┃
 ┃  Position: Senior Security Analyst              ┃
 ┃  Clearance Level: 3                             ┃
 ┃  Shift: Night Watch (00:00 - 08:00)            ┃
@@ -330,7 +330,7 @@ SURVIVE THE SHIFT. PROTECT THE DATA.
 1. **Network Scanning**
    ```
    [*] Scanning for wireless networks...
-   
+
    SSID              BSSID              CH  PWR  ENC
    ═════════════════════════════════════════════════
    Home_Network_5G   00:11:22:33:44:55  6   -45  WPA2
@@ -374,24 +374,24 @@ SURVIVE THE SHIFT. PROTECT THE DATA.
 ### IP Geolocation Features:
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  🌍 IP INTELLIGENCE REPORT                      ┃
+┃   IP INTELLIGENCE REPORT                      ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 Target IP: 203.0.113.42
 
-📍 Location:
+ Location:
    Country: United States
    Region: California
    City: San Francisco
    Coordinates: 37.7749° N, 122.4194° W
    Timezone: America/Los_Angeles
 
-🏢 Organization:
+ Organization:
    ISP: Example Telecommunications Inc.
    ASN: AS15169
    Organization: Google LLC
 
-🔍 Additional Intel:
+ Additional Intel:
    - Reverse DNS: example.com
    - Open Ports: 22, 80, 443
    - Services: SSH, HTTP, HTTPS
@@ -475,13 +475,13 @@ Target IP: 203.0.113.42
 1. **Matrix-Style Boot Sequence**
    ```
    [████████████████████████████████] 100%
-   
-   ⚡ INITIALIZING NIGHTHAWK OS v2.0...
-   ⚡ Loading neural network...
-   ⚡ Establishing secure connection...
-   ⚡ Decrypting mission database...
-   
-   ✓ SYSTEM READY
+
+    INITIALIZING NIGHTHAWK OS v2.0...
+    Loading neural network...
+    Establishing secure connection...
+    Decrypting mission database...
+
+    SYSTEM READY
    ```
 
 2. **Typing Animation**
@@ -517,7 +517,7 @@ Target IP: 203.0.113.42
 ### Sound Effects (Optional ASCII Art Representation):
 ```
 [*] Playing: hack_sound.wav
-♪♪♪ BEEP BEEP BEEP ♪♪♪
+ BEEP BEEP BEEP
 ```
 
 ---
@@ -563,7 +563,7 @@ Target IP: 203.0.113.42
 ### Achievement System:
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  🏆 ACHIEVEMENT UNLOCKED!                       ┃
+┃   ACHIEVEMENT UNLOCKED!                       ┃
 ┃                                                  ┃
 ┃  "First Blood"                                   ┃
 ┃  Successfully compromised your first system      ┃
@@ -573,16 +573,16 @@ Target IP: 203.0.113.42
 ```
 
 **Achievement Categories:**
-- 🎯 Mission Mastery (Complete X missions)
-- 💀 Elite Hacker (Reach level 50)
-- 🏆 CTF Champion (Win 10 CTF events)
-- 💰 Crypto Millionaire (Earn ₡1,000,000)
-- 🔓 Exploit Master (Use 50 different exploits)
-- 🛡️ Defender of the Realm (Block 100 attacks)
-- 🕵️ OSINT Expert (Complete 50 recon missions)
-- 📡 WiFi Warrior (Crack 25 networks)
-- 🌍 Global Domination (Complete missions in all regions)
-- 👻 Ghost Protocol (Complete mission undetected)
+-  Mission Mastery (Complete X missions)
+-  Elite Hacker (Reach level 50)
+-  CTF Champion (Win 10 CTF events)
+-  Crypto Millionaire (Earn ₡1,000,000)
+-  Exploit Master (Use 50 different exploits)
+-  Defender of the Realm (Block 100 attacks)
+-  OSINT Expert (Complete 50 recon missions)
+-  WiFi Warrior (Crack 25 networks)
+-  Global Domination (Complete missions in all regions)
+-  Ghost Protocol (Complete mission undetected)
 
 ---
 
@@ -773,15 +773,15 @@ src/nighthawk/
 ### Real-Time Mechanics:
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  ⚔️  RED VS BLUE BATTLE - ROUND 1/3            ┃
+┃    RED VS BLUE BATTLE - ROUND 1/3            ┃
 ┃  Your Role: Blue Team Defender                  ┃
 ┃  Opponent: Elite Ghost AI (Level 45)           ┃
 ┃  Time Remaining: 15:23                          ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-[14:05] ⚠️  Port scan detected from 10.0.0.15
-[14:06] 🔴 Brute force attack on SSH (port 22)
-[14:07] ⚡ You blocked the attack! +500 points
+[14:05]   Port scan detected from 10.0.0.15
+[14:06]  Brute force attack on SSH (port 22)
+[14:07]  You blocked the attack! +500 points
 
 Your Actions:
 1. monitor logs     - Check security logs
@@ -799,14 +799,14 @@ AI is: Attempting SQL injection on web app...
 ### Recommendation: **Python** (Current choice is perfect!)
 
 **Why Python is ideal:**
-1. ✅ **Already used** - Nighthawk is built with Python
-2. ✅ **Rich ecosystem** - Excellent libraries for security tools
-3. ✅ **Terminal UI** - Rich, Textual, Blessed libraries
-4. ✅ **Cross-platform** - Works on Windows, Linux, macOS
-5. ✅ **Easy to learn** - Good for contributors
-6. ✅ **Security tools** - Scapy, Paramiko, Requests, BeautifulSoup
-7. ✅ **Database support** - SQLAlchemy, SQLite, PostgreSQL
-8. ✅ **Async support** - asyncio for real-time features
+1.  **Already used** - Nighthawk is built with Python
+2.  **Rich ecosystem** - Excellent libraries for security tools
+3.  **Terminal UI** - Rich, Textual, Blessed libraries
+4.  **Cross-platform** - Works on Windows, Linux, macOS
+5.  **Easy to learn** - Good for contributors
+6.  **Security tools** - Scapy, Paramiko, Requests, BeautifulSoup
+7.  **Database support** - SQLAlchemy, SQLite, PostgreSQL
+8.  **Async support** - asyncio for real-time features
 
 **Key Python Libraries for this project:**
 ```python
@@ -904,18 +904,18 @@ pydantic           # Data validation
 ## Legal & Ethical Disclaimer
 
 ```
-⚠️  IMPORTANT LEGAL NOTICE ⚠️
+  IMPORTANT LEGAL NOTICE
 
 This is a SIMULATION game for EDUCATIONAL purposes only.
 
-✓ All hacking activities occur in isolated virtual environments
-✓ No real systems are targeted or harmed
-✓ All "exploits" are simulated and safe
-✓ Designed to teach cybersecurity concepts ethically
+ All hacking activities occur in isolated virtual environments
+ No real systems are targeted or harmed
+ All "exploits" are simulated and safe
+ Designed to teach cybersecurity concepts ethically
 
-✗ DO NOT use techniques learned here on real systems without authorization
-✗ Unauthorized access to computer systems is ILLEGAL
-✗ Always obtain written permission before security testing
+ DO NOT use techniques learned here on real systems without authorization
+ Unauthorized access to computer systems is ILLEGAL
+ Always obtain written permission before security testing
 
 By playing this game, you agree to use knowledge gained ONLY for:
 - Authorized penetration testing
@@ -933,16 +933,16 @@ ENCRYPTED CREW and NIGHTHAWK are not responsible for misuse.
 
 This design creates a comprehensive, professional, terminal-based hacking simulation RPG that:
 
-✅ Combines real security tools with gamification
-✅ Provides Red Team vs Blue Team gameplay
-✅ Features competitive CTF events with AI opponents
-✅ Includes WiFi hacking, IP intelligence, and OSINT
-✅ Offers career mode with storyline missions
-✅ Implements virtual machine simulation
-✅ Maintains educational focus with ethical boundaries
-✅ Delivers cinematic terminal UI/UX experience
-✅ Provides progression, achievements, and rewards
-✅ Ensures professional, polished gameplay
+ Combines real security tools with gamification
+ Provides Red Team vs Blue Team gameplay
+ Features competitive CTF events with AI opponents
+ Includes WiFi hacking, IP intelligence, and OSINT
+ Offers career mode with storyline missions
+ Implements virtual machine simulation
+ Maintains educational focus with ethical boundaries
+ Delivers cinematic terminal UI/UX experience
+ Provides progression, achievements, and rewards
+ Ensures professional, polished gameplay
 
 **Total Development Effort**: 10-12 weeks for full implementation
 **Target Audience**: Security enthusiasts, students, CTF players, professionals
@@ -951,6 +951,6 @@ This design creates a comprehensive, professional, terminal-based hacking simula
 
 ---
 
-*Document Version: 1.0*  
-*Last Updated: September 2, 2026*  
+*Document Version: 1.0*
+*Last Updated: September 2, 2026*
 *Author: ENCRYPTED CREW Development Team*

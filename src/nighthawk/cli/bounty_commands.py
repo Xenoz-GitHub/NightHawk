@@ -20,7 +20,7 @@ from nighthawk.cli.banner import (
 console = Console()
 bounty_app = typer.Typer(
     name="bounties",
-    help="💰 Bounty System - Accept missions for fame and fortune",
+    help=" Bounty System - Accept missions for fame and fortune",
 )
 
 # Global bounty board and generator instances
@@ -60,7 +60,7 @@ def initialize_bounty_board(player_level: int = 1):
 def show_bounty_board(
     player_level: int = typer.Option(1, "--level", "-l", help="Player level for mission filtering")
 ) -> None:
-    """💰 Display the bounty board with available missions."""
+    """ Display the bounty board with available missions."""
     console.clear()
     
     board = get_bounty_board()
@@ -76,7 +76,7 @@ def list_missions(
     player_level: int = typer.Option(1, "--level", "-l", help="Player level for mission filtering"),
     limit: int = typer.Option(20, "--limit", "-n", help="Maximum missions to show"),
 ) -> None:
-    """📋 List available missions with filtering."""
+    """ List available missions with filtering."""
     console.clear()
     BountyBoardUI.print_header("MISSION LIST")
     
@@ -102,7 +102,7 @@ def mission_info(
     mission_number: int = typer.Argument(..., help="Mission number to view details"),
     player_level: int = typer.Option(1, "--level", "-l", help="Player level"),
 ) -> None:
-    """🔍 View detailed information about a specific mission."""
+    """ View detailed information about a specific mission."""
     console.clear()
     
     board = get_bounty_board()
@@ -124,7 +124,7 @@ def accept_mission(
     player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
     player_level: int = typer.Option(1, "--level", "-l", help="Player level"),
 ) -> None:
-    """✅ Accept a mission from the bounty board."""
+    """ Accept a mission from the bounty board."""
     board = get_bounty_board()
     initialize_bounty_board(player_level)
     
@@ -146,7 +146,7 @@ def accept_mission(
         
         if success:
             BountyBoardUI.print_mission_accepted(mission)
-            print_success(console, f"✓ Mission '{mission.title}' accepted!")
+            print_success(console, f" Mission '{mission.title}' accepted!")
             print_info(console, f"Deadline: {mission.deadline.strftime('%Y-%m-%d %H:%M:%S')}")
         else:
             print_error(console, "Failed to accept mission!")
@@ -158,7 +158,7 @@ def accept_mission(
 def show_active_missions(
     player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
 ) -> None:
-    """🎯 Show your active missions."""
+    """ Show your active missions."""
     console.clear()
     
     board = get_bounty_board()
@@ -172,7 +172,7 @@ def complete_mission(
     mission_number: int = typer.Argument(..., help="Mission number (from active list) to complete"),
     player_level: int = typer.Option(1, "--level", "-l", help="Player level"),
 ) -> None:
-    """✨ Complete an active mission."""
+    """ Complete an active mission."""
     board = get_bounty_board()
     active_missions = board.get_player_active_missions()
     
@@ -193,7 +193,7 @@ def complete_mission(
     
     if success:
         BountyBoardUI.print_mission_completed(mission, crypto_reward, xp_reward)
-        print_success(console, "✓ Mission completed successfully!")
+        print_success(console, " Mission completed successfully!")
         console.print()
     else:
         print_error(console, "Failed to complete mission!")
@@ -203,7 +203,7 @@ def complete_mission(
 def show_mission_history(
     player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
 ) -> None:
-    """📜 Show your completed mission history."""
+    """ Show your completed mission history."""
     console.clear()
     BountyBoardUI.print_header("MISSION HISTORY")
     
@@ -243,7 +243,7 @@ def show_mission_history(
 
 @bounty_app.command("stats")
 def show_bounty_stats() -> None:
-    """📊 Display bounty system statistics."""
+    """ Display bounty system statistics."""
     console.clear()
     BountyBoardUI.print_header("BOUNTY STATISTICS")
     
@@ -270,7 +270,7 @@ def show_bounty_stats() -> None:
 def refresh_bounty_board(
     player_level: int = typer.Option(1, "--level", "-l", help="Player level"),
 ) -> None:
-    """🔄 Refresh bounty board with new missions."""
+    """ Refresh bounty board with new missions."""
     global _bounty_board
     
     generator = get_mission_generator()
@@ -288,13 +288,13 @@ def refresh_bounty_board(
         for mission in new_missions:
             get_bounty_board().post_mission(mission)
     
-    print_success(console, "✓ Bounty board refreshed with 10 new missions!")
+    print_success(console, " Bounty board refreshed with 10 new missions!")
     console.print()
 
 
 @bounty_app.command("clients")
 def list_clients() -> None:
-    """👥 Display information about all bounty clients."""
+    """ Display information about all bounty clients."""
     console.clear()
     BountyBoardUI.print_header("BOUNTY CLIENTS")
     
@@ -312,7 +312,7 @@ def list_clients() -> None:
     table.add_column("Contact", style="dim")
     
     for client in board.clients.values():
-        icon = BountyBoardUI.CLIENT_ICONS.get(client.client_type, "🔹")
+        icon = BountyBoardUI.CLIENT_ICONS.get(client.client_type, "")
         success_rate = f"{client.successful_completion_rate * 100:.1f}%" if client.total_missions_posted > 0 else "N/A"
         
         table.add_row(

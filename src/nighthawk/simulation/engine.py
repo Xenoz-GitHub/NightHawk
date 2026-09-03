@@ -35,6 +35,7 @@ from nighthawk.simulation.scenario import generate_world
 from nighthawk.simulation.scoring import score as score_world
 
 MONITOR_BOOST = 0.15
+ACTION_POINTS_PER_TURN = 3
 
 
 def from_scenario(
@@ -61,6 +62,8 @@ class SimulationEngine:
         self.outcome: str | None = None  # completed | time_expired
         self._monitor_boost = 0.0
         self._pending_actions: list[dict] = []  # attacker actions this tick
+        self._attacker_points = ACTION_POINTS_PER_TURN
+        self._defender_points = ACTION_POINTS_PER_TURN
         self._defender = defender
         self._scenario = world.scenario_id
         self._seed = world.seed
@@ -76,6 +79,14 @@ class SimulationEngine:
     def last_seq(self) -> int:
         return self.log.last_seq
 
+    @property
+    def attacker_action_points(self) -> int:
+        return self._attacker_points
+
+    @property
+    def defender_action_points(self) -> int:
+        return self._defender_points
+
     def state_hash(self) -> str:
         return self.world.state_hash()
 
@@ -89,6 +100,12 @@ class SimulationEngine:
             "finished": self.finished,
             "outcome": self.outcome,
             "max_ticks": self.max_ticks,
+            "pending_actions": [
+                {**action, "kind": action["kind"].value}
+                for action in self._pending_actions
+            ],
+            "attacker_points": self._attacker_points,
+            "defender_points": self._defender_points,
         }
 
     def restore(self, snap: dict) -> None:
@@ -98,7 +115,16 @@ class SimulationEngine:
         self.outcome = snap["outcome"]
         self.max_ticks = int(snap["max_ticks"])
         self._monitor_boost = 0.0
-        self._pending_actions = []
+        self._pending_actions = [
+            {**action, "kind": ActionKind(action["kind"])}
+            for action in snap.get("pending_actions", [])
+        ]
+        self._attacker_points = int(
+            snap.get("attacker_points", ACTION_POINTS_PER_TURN)
+        )
+        self._defender_points = int(
+            snap.get("defender_points", ACTION_POINTS_PER_TURN)
+        )
 
     def _require_active(self) -> None:
         """Reject actions on a finished run without mutating anything."""
@@ -115,7 +141,13 @@ class SimulationEngine:
         entry = action_spec(kind)
         if entry.actor != "attacker":
             raise InvalidActionError(f"{kind.value} is not an attacker action.")
+        if entry.cost > self._attacker_points:
+            raise InvalidActionError(
+                f"Not enough attacker action points for {kind.value}; "
+                f"need {entry.cost}, have {self._attacker_points}."
+            )
         info = apply_attacker_action(self.world, kind, target)
+        self._attacker_points -= entry.cost
         self._pending_actions.append(
             {"kind": kind, "target": target, "tick": self.world.tick}
         )
@@ -128,7 +160,13 @@ class SimulationEngine:
         entry = action_spec(kind)
         if entry.actor != "defender":
             raise InvalidActionError(f"{kind.value} is not a defender action.")
+        if entry.cost > self._defender_points:
+            raise InvalidActionError(
+                f"Not enough defender action points for {kind.value}; "
+                f"need {entry.cost}, have {self._defender_points}."
+            )
         info = apply_defender_action(self.world, kind, target)
+        self._defender_points -= entry.cost
         if kind is ActionKind.MONITOR:
             self._monitor_boost = MONITOR_BOOST
         self._log_action("defender", info, entry.cost)
@@ -141,6 +179,8 @@ class SimulationEngine:
         self._push_checkpoint()
         completed_tick = self.tick_end(self._pending_actions)
         self._pending_actions = []
+        self._attacker_points = ACTION_POINTS_PER_TURN
+        self._defender_points = ACTION_POINTS_PER_TURN
         self._apply_decay(completed_tick)
         if self._check_terminal():
             return completed_tick
@@ -175,6 +215,8 @@ class SimulationEngine:
         self.outcome = None
         self._monitor_boost = 0.0
         self._pending_actions = []
+        self._attacker_points = ACTION_POINTS_PER_TURN
+        self._defender_points = ACTION_POINTS_PER_TURN
         self._checkpoints = []
         return self
 
@@ -229,10 +271,10 @@ class SimulationEngine:
         tick = self.world.tick
         boost = self._monitor_boost
         self._monitor_boost = 0.0
-        if pending:
-            kind: ActionKind = pending[0]["kind"]
-            target = pending[0]["target"] or ""
-            rng = random.Random(f"{self.world.state_hash()}")
+        rng = random.Random(f"{self.world.state_hash()}")
+        for action in pending:
+            kind: ActionKind = action["kind"]
+            target = action["target"] or ""
             for alert in detection_rolls(self.world, rng, kind, target, tick, boost):
                 self.world.alerts.append(alert)
                 self.log.append(

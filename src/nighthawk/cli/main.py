@@ -18,6 +18,8 @@ from nighthawk.cli.banner import (
     create_header_panel,
     create_status_text,
 )
+from nighthawk.cli.game_commands import game_app
+from nighthawk.cli.redteam_commands import redteam_app
 
 console = Console()
 
@@ -57,12 +59,12 @@ def main_callback(
         console.print()
         console.print("[dim]For help, use: [cyan]nighthawk --help[/cyan][/dim]")
         raise typer.Exit()
-    
+
     # Handle --banner flag
     if banner:
         print_banner(console, __version__)
         raise typer.Exit()
-    
+
     # If no subcommand, show help with banner
     if ctx.invoked_subcommand is None:
         print_banner(console, __version__)
@@ -84,30 +86,30 @@ def scope(
     from nighthawk.scope.manager import ScopeManager
     from nighthawk.core.exceptions import ConfigurationError
     import yaml
-    
+
     console.print(create_header_panel("Scope Management", "Authorization & Target Configuration"))
     console.print()
-    
+
     # Show scope file contents
     if show:
         scope_path = Path(file)
         if not scope_path.exists():
             print_error(console, f"Scope file not found: {file}")
             raise typer.Exit(1)
-        
+
         print_info(console, f"Scope file: {scope_path.absolute()}")
         console.print()
-        
+
         content = scope_path.read_text()
         from rich.syntax import Syntax
         syntax = Syntax(content, "yaml", theme="monokai", line_numbers=True)
         console.print(syntax)
         raise typer.Exit(0)
-    
+
     # Quick add domain/IP/URL
     if add_domain or add_ip or add_url:
         scope_path = Path(file)
-        
+
         # Create file if it doesn't exist
         if not scope_path.exists():
             print_warning(console, f"Scope file not found. Creating: {file}")
@@ -121,7 +123,7 @@ def scope(
         else:
             with open(scope_path, 'r') as f:
                 scope_data = yaml.safe_load(f) or {}
-        
+
         # Ensure lists exist
         if 'domains' not in scope_data:
             scope_data['domains'] = []
@@ -129,7 +131,7 @@ def scope(
             scope_data['ips'] = []
         if 'urls' not in scope_data:
             scope_data['urls'] = []
-        
+
         # Add the new item
         if add_domain:
             if add_domain not in scope_data['domains']:
@@ -137,35 +139,35 @@ def scope(
                 print_success(console, f"Added domain: {add_domain}")
             else:
                 print_warning(console, f"Domain already in scope: {add_domain}")
-        
+
         if add_ip:
             if add_ip not in scope_data['ips']:
                 scope_data['ips'].append(add_ip)
                 print_success(console, f"Added IP: {add_ip}")
             else:
                 print_warning(console, f"IP already in scope: {add_ip}")
-        
+
         if add_url:
             if add_url not in scope_data['urls']:
                 scope_data['urls'].append(add_url)
                 print_success(console, f"Added URL: {add_url}")
             else:
                 print_warning(console, f"URL already in scope: {add_url}")
-        
+
         # Save file
         with open(scope_path, 'w') as f:
             yaml.dump(scope_data, f, default_flow_style=False, sort_keys=False)
-        
+
         print_success(console, f"Updated scope file: {file}")
         console.print()
         print_info(console, "View with: [cyan]nighthawk scope --show[/cyan]")
         print_info(console, "Validate with: [cyan]nighthawk scope[/cyan]")
         raise typer.Exit(0)
-    
+
     # Interactive edit mode
     if edit:
         scope_path = Path(file)
-        
+
         if not scope_path.exists():
             create_new = typer.confirm(f"Scope file not found. Create {file}?", default=True)
             if create_new:
@@ -184,17 +186,17 @@ def scope(
             # Load current scope
             with open(scope_path, 'r') as f:
                 scope_data = yaml.safe_load(f) or {}
-        
+
         # Ensure lists exist
         for key in ['domains', 'ips', 'cidrs', 'urls']:
             if key not in scope_data:
                 scope_data[key] = []
         if 'modules' not in scope_data:
             scope_data['modules'] = ['web', 'network', 'secrets', 'technology', 'dns']
-        
+
         print_info(console, "Interactive Scope Editor - Press Ctrl+C to cancel")
         console.print()
-        
+
         try:
             while True:
                 console.print("\n[bold cyan]═══ Current Scope ═══[/bold cyan]")
@@ -203,16 +205,16 @@ def scope(
                 console.print(f"  [green]●[/green] CIDRs: [white]{len(scope_data['cidrs'])}[/white]")
                 console.print(f"  [green]●[/green] URLs: [white]{len(scope_data['urls'])}[/white]")
                 console.print()
-                
+
                 console.print("[bold yellow]Options:[/bold yellow]")
                 console.print("  [cyan]1[/cyan] - Add domain        [cyan]5[/cyan] - View all entries")
                 console.print("  [cyan]2[/cyan] - Add IP           [cyan]6[/cyan] - Remove entry")
                 console.print("  [cyan]3[/cyan] - Add CIDR         [cyan]7[/cyan] - [green]Save and exit[/green]")
                 console.print("  [cyan]4[/cyan] - Add URL          [cyan]8[/cyan] - [red]Exit without saving[/red]")
                 console.print()
-                
+
                 choice = typer.prompt("Choose option", type=str).strip()
-                
+
                 if choice == "1":
                     domain = typer.prompt("Enter domain (e.g., example.com or hyenso-portfolio.vercel.app)")
                     if domain and domain not in scope_data['domains']:
@@ -220,7 +222,7 @@ def scope(
                         print_success(console, f"Added domain: {domain}")
                     elif domain:
                         print_warning(console, "Domain already exists")
-                
+
                 elif choice == "2":
                     ip = typer.prompt("Enter IP address (e.g., 192.168.1.1)")
                     if ip and ip not in scope_data['ips']:
@@ -228,7 +230,7 @@ def scope(
                         print_success(console, f"Added IP: {ip}")
                     elif ip:
                         print_warning(console, "IP already exists")
-                
+
                 elif choice == "3":
                     cidr = typer.prompt("Enter CIDR range (e.g., 192.168.1.0/24)")
                     if cidr and cidr not in scope_data['cidrs']:
@@ -236,7 +238,7 @@ def scope(
                         print_success(console, f"Added CIDR: {cidr}")
                     elif cidr:
                         print_warning(console, "CIDR already exists")
-                
+
                 elif choice == "4":
                     url = typer.prompt("Enter URL (e.g., https://example.com)")
                     if url and url not in scope_data['urls']:
@@ -244,7 +246,7 @@ def scope(
                         print_success(console, f"Added URL: {url}")
                     elif url:
                         print_warning(console, "URL already exists")
-                
+
                 elif choice == "5":
                     console.print("\n[bold cyan]═══ All Entries ═══[/bold cyan]")
                     if scope_data['domains']:
@@ -263,19 +265,19 @@ def scope(
                         console.print("\n[yellow]URLs:[/yellow]")
                         for i, u in enumerate(scope_data['urls'], 1):
                             console.print(f"  {i}. [white]{u}[/white]")
-                    
+
                     if not any([scope_data['domains'], scope_data['ips'], scope_data['cidrs'], scope_data['urls']]):
                         print_warning(console, "No entries yet. Add some targets!")
-                
+
                 elif choice == "6":
                     console.print("\n[yellow]Remove from:[/yellow]")
                     console.print("  1 - Domains")
                     console.print("  2 - IPs")
                     console.print("  3 - CIDRs")
                     console.print("  4 - URLs")
-                    
+
                     remove_choice = typer.prompt("Choose category", type=str).strip()
-                    
+
                     if remove_choice == "1" and scope_data['domains']:
                         for i, d in enumerate(scope_data['domains'], 1):
                             console.print(f"  {i}. {d}")
@@ -283,7 +285,7 @@ def scope(
                         if 1 <= idx <= len(scope_data['domains']):
                             removed = scope_data['domains'].pop(idx - 1)
                             print_success(console, f"Removed: {removed}")
-                    
+
                     elif remove_choice == "2" and scope_data['ips']:
                         for i, ip in enumerate(scope_data['ips'], 1):
                             console.print(f"  {i}. {ip}")
@@ -291,7 +293,7 @@ def scope(
                         if 1 <= idx <= len(scope_data['ips']):
                             removed = scope_data['ips'].pop(idx - 1)
                             print_success(console, f"Removed: {removed}")
-                    
+
                     elif remove_choice == "3" and scope_data['cidrs']:
                         for i, c in enumerate(scope_data['cidrs'], 1):
                             console.print(f"  {i}. {c}")
@@ -299,7 +301,7 @@ def scope(
                         if 1 <= idx <= len(scope_data['cidrs']):
                             removed = scope_data['cidrs'].pop(idx - 1)
                             print_success(console, f"Removed: {removed}")
-                    
+
                     elif remove_choice == "4" and scope_data['urls']:
                         for i, u in enumerate(scope_data['urls'], 1):
                             console.print(f"  {i}. {u}")
@@ -309,7 +311,7 @@ def scope(
                             print_success(console, f"Removed: {removed}")
                     else:
                         print_warning(console, "No entries in that category")
-                
+
                 elif choice == "7":
                     # Save and exit
                     with open(scope_path, 'w') as f:
@@ -318,21 +320,21 @@ def scope(
                     print_success(console, f"Saved scope to: {file}")
                     print_info(console, f"Total entries: {len(scope_data['domains']) + len(scope_data['ips']) + len(scope_data['cidrs']) + len(scope_data['urls'])}")
                     break
-                
+
                 elif choice == "8":
                     console.print()
                     print_info(console, "Exited without saving")
                     break
-                
+
                 else:
                     print_warning(console, "Invalid option. Please choose 1-8.")
-        
+
         except KeyboardInterrupt:
             console.print("\n")
             print_warning(console, "Cancelled by user")
-        
+
         raise typer.Exit(0)
-    
+
     # Create example scope
     if create:
         if Path(file).exists():
@@ -341,7 +343,7 @@ def scope(
             if not overwrite:
                 print_info(console, "Operation cancelled")
                 raise typer.Exit(0)
-        
+
         example_scope = """# ENCRYPTED CREW - NIGHTHAWK Scope Configuration
 # Define authorized targets for ethical security assessment
 name: default_scope
@@ -387,30 +389,30 @@ rate_limits:
         print_success(console, f"Created example scope file: {file}")
         print_info(console, "Edit the file to add your authorized targets")
         raise typer.Exit(0)
-    
+
     # Validate existing scope
     try:
         if not Path(file).exists():
             print_error(console, f"Scope file not found: {file}")
             print_info(console, f"Create one with: [cyan]nighthawk scope --create[/cyan]")
             raise typer.Exit(1)
-        
+
         manager = ScopeManager(file)
-        
+
         # Create validation table
-        table = Table(title="✓ Scope Configuration Valid", border_style="green")
+        table = Table(title=" Scope Configuration Valid", border_style="green")
         table.add_column("Category", style="cyan", no_wrap=True)
         table.add_column("Values", style="white")
-        
-        table.add_row("📁 Config File", str(Path(file).absolute()))
-        table.add_row("🌐 Domains", str(len(manager.config.domains)) if manager.config.domains else "0")
-        table.add_row("🖥️  IP Addresses", str(len(manager.config.ips)) if manager.config.ips else "0")
-        table.add_row("📡 CIDR Ranges", str(len(manager.config.cidrs)) if manager.config.cidrs else "0")
-        table.add_row("🔧 Authorized Modules", ", ".join(manager.get_authorized_modules()))
-        
+
+        table.add_row(" Config File", str(Path(file).absolute()))
+        table.add_row(" Domains", str(len(manager.config.domains)) if manager.config.domains else "0")
+        table.add_row("  IP Addresses", str(len(manager.config.ips)) if manager.config.ips else "0")
+        table.add_row(" CIDR Ranges", str(len(manager.config.cidrs)) if manager.config.cidrs else "0")
+        table.add_row(" Authorized Modules", ", ".join(manager.get_authorized_modules()))
+
         console.print(table)
         console.print()
-        
+
         # Show details
         if manager.config.domains:
             print_info(console, f"Domains: {', '.join(manager.config.domains[:5])}")
@@ -418,9 +420,9 @@ rate_limits:
             print_info(console, f"IPs: {', '.join(manager.config.ips[:5])}")
         if manager.config.cidrs:
             print_info(console, f"CIDRs: {', '.join(manager.config.cidrs[:5])}")
-        
+
         print_success(console, "Scope configuration is valid and ready to use")
-        
+
     except ConfigurationError as exc:
         print_error(console, f"Invalid scope configuration: {exc}")
         raise typer.Exit(1)
@@ -441,10 +443,10 @@ def discover(
     from nighthawk.scope.manager import ScopeManager
     from nighthawk.network.scanner import NetworkScanner
     import asyncio
-    
+
     console.print(create_header_panel("Network Discovery", f"Target: {target}"))
     console.print()
-    
+
     try:
         # Handle scope validation
         scope = None
@@ -455,31 +457,31 @@ def discover(
                 print_info(console, "Create one with: [cyan]nighthawk scope --create[/cyan]")
                 print_info(console, "Or use [yellow]--skip-scope[/yellow] to bypass (not recommended)")
                 raise typer.Exit(1)
-            
+
             scope = ScopeManager(scope_file)
             scope.validate_target(target)
             print_success(console, f"Target authorized: {target}")
         else:
-            print_warning(console, "⚠️  Scope validation SKIPPED - Ensure you have authorization!")
-        
+            print_warning(console, "  Scope validation SKIPPED - Ensure you have authorization!")
+
         print_info(console, f"Scanning ports: {ports}")
         print_info(console, f"Timeout: {timeout}s")
         console.print()
-        
+
         # Run scan
         with console.status("[bold cyan]Scanning network...[/bold cyan]", spinner="dots"):
             scanner = NetworkScanner()
             result = asyncio.run(scanner.run(target, scope_manager=scope))
-        
+
         # Display results
         results_list = result.get("results", [])
-        
+
         if not results_list:
             print_warning(console, "No open ports discovered")
             raise typer.Exit(0)
-        
+
         table = Table(
-            title=f"🔍 Network Scan Results: {target}",
+            title=f" Network Scan Results: {target}",
             border_style="cyan",
             show_lines=True
         )
@@ -487,13 +489,13 @@ def discover(
         table.add_column("State", style="bold green")
         table.add_column("Service", style="white")
         table.add_column("Version", style="dim white")
-        
+
         for r in results_list:
             port = str(r.get("port", ""))
             state = r.get("state", "")
             service = r.get("service", "unknown")
             version = r.get("version", "")
-            
+
             # Color code by service
             service_style = "white"
             if service in ["http", "https"]:
@@ -502,13 +504,13 @@ def discover(
                 service_style = "yellow"
             elif service in ["ftp", "smb"]:
                 service_style = "red"
-            
+
             table.add_row(port, state, f"[{service_style}]{service}[/{service_style}]", version)
-        
+
         console.print(table)
         console.print()
         print_success(console, f"Discovered {len(results_list)} open port(s)")
-        
+
     except KeyboardInterrupt:
         print_warning(console, "Scan cancelled by user")
         raise typer.Exit(130)
@@ -531,10 +533,10 @@ def web(
     from nighthawk.web.scanner import WebScanner
     import asyncio
     import json
-    
+
     console.print(create_header_panel("Web Security Assessment", f"Target: {url}"))
     console.print()
-    
+
     try:
         # Handle scope validation
         scope = None
@@ -545,20 +547,20 @@ def web(
                 print_info(console, "Create one with: [cyan]nighthawk scope --create[/cyan]")
                 print_info(console, "Or use [yellow]--skip-scope[/yellow] to bypass (not recommended)")
                 raise typer.Exit(1)
-            
+
             scope = ScopeManager(scope_file)
             scope.validate_target(url)
             print_success(console, f"Target authorized: {url}")
         else:
-            print_warning(console, "⚠️  Scope validation SKIPPED - Ensure you have authorization!")
-        
+            print_warning(console, "  Scope validation SKIPPED - Ensure you have authorization!")
+
         console.print()
-        
+
         # Run scan
         with console.status("[bold cyan]Scanning website...[/bold cyan]", spinner="dots"):
             scanner = WebScanner()
             result = asyncio.run(scanner.run(url, scope_manager=scope))
-        
+
         # Display results
         console.print(Panel.fit(
             f"[bold white]Web Assessment Complete[/bold white]\n"
@@ -566,33 +568,33 @@ def web(
             border_style="green"
         ))
         console.print()
-        
+
         # Status and basic info
         status_code = result.get('status_code', 'N/A')
         status_color = "green" if str(status_code).startswith("2") else "yellow" if str(status_code).startswith("3") else "red"
-        
+
         info_table = Table(border_style="cyan", show_header=False, box=None)
         info_table.add_column("Property", style="cyan")
         info_table.add_column("Value", style="white")
-        
-        info_table.add_row("📊 Status Code", f"[{status_color}]{status_code}[/{status_color}]")
-        info_table.add_row("📋 Content Type", result.get('content_type', 'N/A'))
-        info_table.add_row("📏 Content Length", str(result.get('content_length', 'N/A')))
-        info_table.add_row("🔒 TLS/SSL", "✓ Supported" if result.get('tls', {}).get('supported', False) else "✗ Not detected")
-        info_table.add_row("🔀 Redirects", str(len(result.get('redirect_chain', []))))
-        info_table.add_row("📑 Headers", str(len(result.get('headers', {}))))
-        
+
+        info_table.add_row(" Status Code", f"[{status_color}]{status_code}[/{status_color}]")
+        info_table.add_row(" Content Type", result.get('content_type', 'N/A'))
+        info_table.add_row(" Content Length", str(result.get('content_length', 'N/A')))
+        info_table.add_row(" TLS/SSL", " Supported" if result.get('tls', {}).get('supported', False) else " Not detected")
+        info_table.add_row(" Redirects", str(len(result.get('redirect_chain', []))))
+        info_table.add_row(" Headers", str(len(result.get('headers', {}))))
+
         console.print(info_table)
         console.print()
-        
+
         # Security headers analysis
         security_headers = result.get('security_headers', {})
         if security_headers:
-            sec_table = Table(title="🛡️  Security Headers Analysis", border_style="cyan")
+            sec_table = Table(title="  Security Headers Analysis", border_style="cyan")
             sec_table.add_column("Header", style="cyan")
             sec_table.add_column("Status", style="white")
             sec_table.add_column("Value", style="dim white")
-            
+
             important_headers = [
                 'strict-transport-security',
                 'content-security-policy',
@@ -601,35 +603,35 @@ def web(
                 'x-xss-protection',
                 'referrer-policy',
             ]
-            
+
             headers = result.get('headers', {})
             for header in important_headers:
                 if header in headers:
                     sec_table.add_row(
                         header,
-                        "[green]✓ Present[/green]",
+                        "[green] Present[/green]",
                         str(headers[header])[:50] + "..." if len(str(headers[header])) > 50 else str(headers[header])
                     )
                 else:
-                    sec_table.add_row(header, "[red]✗ Missing[/red]", "")
-            
+                    sec_table.add_row(header, "[red] Missing[/red]", "")
+
             console.print(sec_table)
             console.print()
-        
+
         # TLS information
         tls_info = result.get('tls', {})
         if tls_info.get('supported'):
             print_success(console, f"TLS Version: {tls_info.get('version', 'Unknown')}")
             print_info(console, f"Cipher Suite: {tls_info.get('cipher', 'Unknown')}")
-        
+
         # Export if requested
         if export:
             export_path = Path(export)
             export_path.write_text(json.dumps(result, indent=2), encoding='utf-8')
             print_success(console, f"Results exported to: {export}")
-        
+
         print_success(console, "Web assessment complete")
-        
+
     except KeyboardInterrupt:
         print_warning(console, "Scan cancelled by user")
         raise typer.Exit(130)
@@ -651,10 +653,10 @@ def tech(
     from nighthawk.technology.scanner import FingerprintEngine
     import asyncio
     import json
-    
+
     console.print(create_header_panel("Technology Fingerprinting", f"Target: {url}"))
     console.print()
-    
+
     try:
         # Handle scope validation
         scope = None
@@ -665,20 +667,20 @@ def tech(
                 print_info(console, "Create one with: [cyan]nighthawk scope --create[/cyan]")
                 print_info(console, "Or use [yellow]--skip-scope[/yellow] to bypass (not recommended)")
                 raise typer.Exit(1)
-            
+
             scope = ScopeManager(scope_file)
             scope.validate_target(url)
             print_success(console, f"Target authorized: {url}")
         else:
-            print_warning(console, "⚠️  Scope validation SKIPPED - Ensure you have authorization!")
-        
+            print_warning(console, "  Scope validation SKIPPED - Ensure you have authorization!")
+
         console.print()
-        
+
         # Run scan
         with console.status("[bold cyan]Detecting technologies...[/bold cyan]", spinner="dots"):
             scanner = WebScanner()
             web_result = asyncio.run(scanner.run(url, scope_manager=scope))
-            
+
             engine = FingerprintEngine()
             evidence = {
                 "headers": web_result.get("headers", {}),
@@ -688,14 +690,14 @@ def tech(
                 "scripts": [],
             }
             matches = engine.match_technology(evidence)
-        
+
         if not matches:
             print_warning(console, "No technologies detected")
             raise typer.Exit(0)
-        
+
         # Display results
         table = Table(
-            title=f"🔍 Technology Matches: {url}",
+            title=f" Technology Matches: {url}",
             border_style="cyan",
             show_lines=True
         )
@@ -703,7 +705,7 @@ def tech(
         table.add_column("Category", style="green")
         table.add_column("Confidence", style="yellow", justify="center")
         table.add_column("Evidence", style="dim white")
-        
+
         for m in sorted(matches, key=lambda x: x.confidence_level.value, reverse=True):
             # Color code confidence
             conf_value = m.confidence_level.value
@@ -713,34 +715,34 @@ def tech(
                 conf_display = "[bold yellow]●●○ MEDIUM[/bold yellow]"
             else:
                 conf_display = "[dim]●○○ LOW[/dim]"
-            
+
             # Category icon
             category_icons = {
-                "framework": "🏗️",
-                "cms": "📝",
-                "server": "🖥️",
-                "language": "💻",
-                "library": "📚",
-                "analytics": "📊",
-                "security": "🔒",
+                "framework": "",
+                "cms": "",
+                "server": "",
+                "language": "",
+                "library": "",
+                "analytics": "",
+                "security": "",
             }
-            icon = category_icons.get(m.category.lower(), "🔧")
-            
+            icon = category_icons.get(m.category.lower(), "")
+
             evidence_str = ", ".join(m.evidence[:3])
             if len(evidence_str) > 60:
                 evidence_str = evidence_str[:57] + "..."
-            
+
             table.add_row(
                 m.name,
                 f"{icon} {m.category}",
                 conf_display,
                 evidence_str
             )
-        
+
         console.print(table)
         console.print()
         print_success(console, f"Detected {len(matches)} technology/technologies")
-        
+
         # Export if requested
         if export:
             export_data = [
@@ -755,7 +757,7 @@ def tech(
             export_path = Path(export)
             export_path.write_text(json.dumps(export_data, indent=2), encoding='utf-8')
             print_success(console, f"Results exported to: {export}")
-        
+
     except KeyboardInterrupt:
         print_warning(console, "Detection cancelled by user")
         raise typer.Exit(130)
@@ -777,10 +779,10 @@ def secrets(
     from nighthawk.secrets.scanner import SecretScanner
     import asyncio
     import json
-    
+
     console.print(create_header_panel("Secret Scanner", f"Path: {path}"))
     console.print()
-    
+
     try:
         # Handle scope validation
         scope = None
@@ -791,32 +793,32 @@ def secrets(
                 print_info(console, "Create one with: [cyan]nighthawk scope --create[/cyan]")
                 print_info(console, "Or use [yellow]--skip-scope[/yellow] to bypass (not recommended)")
                 raise typer.Exit(1)
-            
+
             scope = ScopeManager(scope_file)
             scope.validate_target(path)
             print_success(console, f"Target authorized: {path}")
         else:
-            print_warning(console, "⚠️  Scope validation SKIPPED - Ensure you have authorization!")
-        
+            print_warning(console, "  Scope validation SKIPPED - Ensure you have authorization!")
+
         if not redact:
-            print_warning(console, "⚠️  Redaction DISABLED - Secrets will be visible in output!")
-        
+            print_warning(console, "  Redaction DISABLED - Secrets will be visible in output!")
+
         console.print()
-        
+
         # Run scan
         with console.status("[bold cyan]Scanning for secrets...[/bold cyan]", spinner="dots"):
             scanner = SecretScanner()
             result = asyncio.run(scanner.run(path, scope_manager=scope))
-        
+
         findings = result.get("findings", [])
-        
+
         if not findings:
             print_success(console, "No potential secrets detected")
             raise typer.Exit(0)
-        
+
         # Display results
         table = Table(
-            title=f"🔐 Potential Secret Findings ({len(findings)})",
+            title=f" Potential Secret Findings ({len(findings)})",
             border_style="red",
             show_lines=True
         )
@@ -825,20 +827,20 @@ def secrets(
         table.add_column("Type", style="red")
         table.add_column("Confidence", style="yellow", justify="center")
         table.add_column("Match", style="dim white")
-        
+
         for f in findings[:20]:  # Limit to 20 for display
             file_path = str(f.get("file", ""))
             file_name = Path(file_path).name if file_path else "unknown"
-            
+
             match_value = f.get("match", "")
             if redact and len(match_value) > 10:
                 match_value = match_value[:3] + "***" + match_value[-3:]
             elif len(match_value) > 50:
                 match_value = match_value[:47] + "..."
-            
+
             confidence = f.get('confidence', 0)
             conf_color = "red" if confidence > 0.8 else "yellow" if confidence > 0.5 else "white"
-            
+
             table.add_row(
                 file_name,
                 str(f.get("line", "")),
@@ -846,29 +848,29 @@ def secrets(
                 f"[{conf_color}]{confidence:.2f}[/{conf_color}]",
                 match_value
             )
-        
+
         console.print(table)
         console.print()
-        
+
         if len(findings) > 20:
             print_info(console, f"Showing 20 of {len(findings)} findings. Use --export to see all.")
-        
+
         # Summary by type
         type_counts = {}
         for f in findings:
             secret_type = f.get("type", "unknown")
             type_counts[secret_type] = type_counts.get(secret_type, 0) + 1
-        
+
         print_warning(console, f"Total findings: {len(findings)}")
         for secret_type, count in sorted(type_counts.items(), key=lambda x: x[1], reverse=True):
             print_info(console, f"  {secret_type}: {count}")
-        
+
         # Export if requested
         if export:
             export_path = Path(export)
             export_path.write_text(json.dumps(findings, indent=2), encoding='utf-8')
             print_success(console, f"Results exported to: {export}")
-        
+
     except KeyboardInterrupt:
         print_warning(console, "Scan cancelled by user")
         raise typer.Exit(130)
@@ -889,51 +891,51 @@ def assess(
     from nighthawk.web.scanner import WebScanner
     import asyncio
     import uuid
-    
+
     console.print(create_header_panel("Full Assessment Campaign", "Comprehensive Security Assessment"))
     console.print()
-    
+
     try:
         # Load scope
         if not Path(scope_file).exists():
             print_error(console, f"Scope file not found: {scope_file}")
             print_info(console, "Create one with: [cyan]nighthawk scope --create[/cyan]")
             raise typer.Exit(1)
-        
+
         scope = ScopeManager(scope_file)
         print_success(console, f"Loaded scope: {scope_file}")
-        
+
         # Parse modules
         if modules.lower() == "all":
             selected_modules = ["web", "network", "secrets", "tech"]
         else:
             selected_modules = [m.strip() for m in modules.split(",")]
-        
+
         print_info(console, f"Selected modules: {', '.join(selected_modules)}")
         console.print()
-        
+
         # Create campaign
         campaign = AssessmentCampaign(str(uuid.uuid4()), scope)
-        
+
         console.print(Panel.fit(
             f"[bold green]Campaign Started[/bold green]\n"
             f"[cyan]Campaign ID:[/cyan] {campaign.campaign_id}",
             border_style="cyan"
         ))
         console.print()
-        
+
         # Get targets
         targets = scope.config.domains or scope.config.ips or []
         if not targets:
             print_warning(console, "No targets defined in scope")
             raise typer.Exit(1)
-        
+
         print_info(console, f"Targets: {len(targets)}")
-        
+
         # Run assessment
         for idx, target in enumerate(targets[:10], 1):  # Limit to 10 targets
             console.print(f"\n[bold cyan]Target {idx}/{min(len(targets), 10)}:[/bold cyan] {target}")
-            
+
             try:
                 if target.startswith("http") or "." in target:
                     with console.status(f"[cyan]Scanning {target}...[/cyan]"):
@@ -947,9 +949,9 @@ def assess(
                     print_success(console, f"Network scan complete: {target}")
             except Exception as e:
                 print_error(console, f"Failed to scan {target}: {str(e)[:100]}")
-        
+
         campaign.complete()
-        
+
         console.print()
         console.print(Panel.fit(
             f"[bold green]Campaign Complete[/bold green]\n"
@@ -957,9 +959,9 @@ def assess(
             f"[cyan]Results:[/cyan] {len(campaign.results)}",
             border_style="green"
         ))
-        
+
         print_info(console, f"Generate report with: [cyan]nighthawk report {campaign.campaign_id}[/cyan]")
-        
+
     except KeyboardInterrupt:
         print_warning(console, "Assessment cancelled by user")
         raise typer.Exit(130)
@@ -978,19 +980,19 @@ def repair(
     import sys
     import tempfile
     from pathlib import Path
-    
+
     console.print(create_header_panel("Self-Repair & Update", "Reinstall from GitHub Repository"))
     console.print()
-    
+
     repo_url = f"git+https://github.com/Xenoz-GitHub/NightHawk.git@{branch}"
-    
+
     try:
         # Show what will happen
         print_info(console, f"Repository: https://github.com/Xenoz-GitHub/NightHawk")
         print_info(console, f"Branch: {branch}")
         print_info(console, f"Current version: {__version__}")
         console.print()
-        
+
         if not force:
             print_warning(console, "This will:")
             console.print("  1. Create a repair script")
@@ -998,12 +1000,12 @@ def repair(
             console.print("  3. Uninstall and reinstall from GitHub")
             console.print("  4. Restart to verify installation")
             console.print()
-            
+
             confirm = typer.confirm("Continue with repair/update?")
             if not confirm:
                 print_info(console, "Repair cancelled")
                 raise typer.Exit(0)
-        
+
         # Create a temporary repair script that will run after this process exits
         repair_script = f"""
 import subprocess
@@ -1047,18 +1049,18 @@ else:
 
 input("\\nPress Enter to close...")
 """
-        
+
         # Save repair script to temp file
         temp_dir = Path(tempfile.gettempdir())
         script_path = temp_dir / "nighthawk_repair.py"
         script_path.write_text(repair_script)
-        
+
         print_success(console, f"Created repair script: {script_path}")
         console.print()
         print_info(console, "Starting repair process...")
         print_warning(console, "NIGHTHAWK will now close. The repair will continue in a new window.")
         console.print()
-        
+
         # Start the repair script in a new process
         if sys.platform == "win32":
             # Windows: Start in new console window
@@ -1073,17 +1075,17 @@ input("\\nPress Enter to close...")
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-        
+
         print_success(console, "Repair process started!")
         print_info(console, "This window will close in 2 seconds...")
         console.print()
-        
+
         import time
         time.sleep(2)
-        
+
         # Exit to allow repair
         raise typer.Exit(0)
-        
+
     except KeyboardInterrupt:
         print_warning(console, "Repair cancelled by user")
         raise typer.Exit(130)
@@ -1102,51 +1104,51 @@ def config(
     """Manage user configuration and preferences."""
     from nighthawk.config.user_config import get_config, ConfigManager
     from pathlib import Path
-    
+
     console.print(create_header_panel("Configuration Management", "User Preferences & Settings"))
     console.print()
-    
+
     try:
         config_manager = get_config()
-        
+
         if action == "show":
             # Display current configuration
             config_dict = config_manager.config.model_dump()
-            
+
             def print_config_section(title: str, data: dict, indent: int = 0):
                 """Recursively print configuration."""
                 prefix = "  " * indent
                 if indent == 0:
                     console.print(f"\n[bold cyan]{title}[/bold cyan]")
                     console.print("-" * 60)
-                
+
                 for k, v in data.items():
                     if isinstance(v, dict):
                         console.print(f"{prefix}[yellow]{k}:[/yellow]")
                         print_config_section("", v, indent + 1)
                     else:
                         console.print(f"{prefix}[cyan]{k}:[/cyan] [white]{v}[/white]")
-            
+
             console.print(f"[dim]Config file: {config_manager.config_path}[/dim]")
-            
+
             for section in ["theme", "scan", "report"]:
                 if section in config_dict:
                     print_config_section(section.upper(), config_dict[section])
-            
+
             # Global settings
             console.print(f"\n[bold cyan]GLOBAL SETTINGS[/bold cyan]")
             console.print("-" * 60)
             for k, v in config_dict.items():
                 if k not in ["theme", "scan", "report"]:
                     console.print(f"[cyan]{k}:[/cyan] [white]{v}[/white]")
-            
+
             print_info(console, f"\nEdit config: [cyan]nighthawk config set --key KEY --value VALUE[/cyan]")
-            
+
         elif action == "set":
             if not key or value is None:
                 print_error(console, "Both --key and --value are required for 'set' action")
                 raise typer.Exit(1)
-            
+
             try:
                 # Try to parse value as JSON for complex types
                 import json
@@ -1154,7 +1156,7 @@ def config(
                     parsed_value = json.loads(value)
                 except json.JSONDecodeError:
                     parsed_value = value
-                
+
                 config_manager.set(key, parsed_value)
                 config_manager.save_config()
                 print_success(console, f"Set {key} = {parsed_value}")
@@ -1162,7 +1164,7 @@ def config(
             except Exception as e:
                 print_error(console, f"Failed to set configuration: {e}")
                 raise typer.Exit(1)
-        
+
         elif action == "reset":
             confirm = typer.confirm("Reset all configuration to defaults?")
             if confirm:
@@ -1171,18 +1173,18 @@ def config(
                 print_success(console, "Configuration reset to defaults")
             else:
                 print_info(console, "Reset cancelled")
-        
+
         elif action == "export":
             export_path = Path(output)
             config_manager.export_example(export_path)
             print_success(console, f"Example configuration exported to: {export_path}")
             print_info(console, "Edit this file and place it in ~/.nighthawk/config.json")
-        
+
         else:
             print_error(console, f"Unknown action: {action}")
             print_info(console, "Valid actions: show, set, reset, export")
             raise typer.Exit(1)
-    
+
     except Exception as exc:
         print_error(console, f"Configuration failed: {exc}")
         raise typer.Exit(1)
@@ -1198,16 +1200,16 @@ def report(
     from nighthawk.reporting.generator import ReportGenerator
     from nighthawk.models.core import Finding
     import json
-    
+
     console.print(create_header_panel("Report Generation", f"Campaign: {campaign}"))
     console.print()
-    
+
     try:
         print_info(console, f"Generating {format.upper()} report...")
-        
+
         generator = ReportGenerator()
         findings = []  # In production, load from DB for campaign
-        
+
         # Generate based on format
         if format.lower() == "json":
             output = output if output.endswith(".json") else output.replace(".html", ".json")
@@ -1224,91 +1226,91 @@ def report(
         else:
             print_error(console, f"Unknown format: {format}")
             raise typer.Exit(1)
-        
+
         # Show report info
         report_path = Path(output)
         if report_path.exists():
             size = report_path.stat().st_size
             print_info(console, f"Report size: {size:,} bytes")
             print_info(console, f"Location: {report_path.absolute()}")
-        
+
         print_success(console, "Report generation complete")
-        
+
     except Exception as exc:
         print_error(console, f"Report generation failed: {exc}")
         raise typer.Exit(1)
 
 
-@app.command()
+@game_app.command("start-legacy", hidden=True)
 def game_start() -> None:
     """Start the hacking simulation game."""
     from nighthawk.game.engine import GameEngine
     from rich.prompt import Prompt, Confirm
     import time
-    
+
     console.clear()
     print_banner(console, __version__)
     console.print()
-    
+
     engine = GameEngine()
-    
+
     # Check for existing saves
     save_slots = engine.get_save_slots()
     existing_saves = [slot for slot, info in save_slots.items() if info is not None]
-    
+
     if existing_saves:
         console.print(Panel.fit(
-            "[bold cyan]🎮 Welcome Back, Operative[/bold cyan]\n"
+            "[bold cyan] Welcome Back, Operative[/bold cyan]\n"
             "[yellow]Continue Your Mission or Start Fresh[/yellow]",
             border_style="cyan"
         ))
         console.print()
-        
+
         choice = Prompt.ask(
             "[cyan]Choose option[/cyan]",
             choices=["new", "load", "exit"],
             default="load"
         )
-        
+
         if choice == "exit":
             return
         elif choice == "load":
             slot = int(Prompt.ask("[cyan]Select save slot[/cyan]", choices=["1", "2", "3"]))
             success = engine.load_game(slot)
             if success:
-                print_success(console, "✓ Game loaded successfully!")
+                print_success(console, " Game loaded successfully!")
                 console.print()
                 _show_game_dashboard(engine)
             return
-    
+
     # New game
     console.print(Panel.fit(
-        "[bold green]🎮 NEW GAME[/bold green]\n"
+        "[bold green] NEW GAME[/bold green]\n"
         "[yellow]Begin Your Journey Into the Shadows[/yellow]",
         border_style="green"
     ))
     console.print()
-    
+
     # Typing effect
-    for line in ["⚡ INITIALIZING NIGHTHAWK SYSTEM...", "⚡ ESTABLISHING SECURE CONNECTION...", "⚡ LOADING NEURAL NETWORK..."]:
+    for line in [" INITIALIZING NIGHTHAWK SYSTEM...", " ESTABLISHING SECURE CONNECTION...", " LOADING NEURAL NETWORK..."]:
         console.print(f"[green]{line}[/green]")
         time.sleep(0.3)
-    console.print("[bold green]✓ SYSTEM READY[/bold green]")
+    console.print("[bold green] SYSTEM READY[/bold green]")
     console.print()
-    
+
     # Get username
     username = Prompt.ask("[cyan]Enter your hacker alias[/cyan]", default="Anonymous")
-    
+
     # Initialize game
     success = engine.initialize_new_game(username)
-    
+
     if not success:
         print_error(console, "Failed to initialize game!")
         return
-    
-    print_success(console, f"✓ Profile created: {username}")
+
+    print_success(console, f" Profile created: {username}")
     console.print()
-    
+
     # Team selection
     _team_selection(engine)
 
@@ -1317,7 +1319,7 @@ def _team_selection(engine: "GameEngine") -> None:
     """Handle team selection."""
     from rich.prompt import Prompt, Confirm
     from nighthawk.game.team_selection import TeamDatabase, TeamRole
-    
+
     console.print("""
 [red bold]
     ██████╗ ███████╗██████╗     ████████╗███████╗ █████╗ ███╗   ███╗
@@ -1337,151 +1339,151 @@ def _team_selection(engine: "GameEngine") -> None:
     ╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝       ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝
 [/cyan bold]
     """, justify="center")
-    
+
     console.print()
     console.print(Panel.fit(
-        "[yellow bold]⚠️  THIS CHOICE IS PERMANENT  ⚠️[/yellow bold]\n"
+        "[yellow bold]  THIS CHOICE IS PERMANENT  [/yellow bold]\n"
         "Choose wisely - your team determines your path, skills, and missions.",
         border_style="yellow",
     ))
     console.print()
-    
+
     # Show quick comparison
-    console.print("[red bold]⚔️  RED TEAM[/red bold] - Offensive Security | Break into systems, find exploits")
-    console.print("[cyan bold]🛡️  BLUE TEAM[/cyan bold] - Defensive Security | Defend systems, detect threats")
+    console.print("[red bold]  RED TEAM[/red bold] - Offensive Security | Break into systems, find exploits")
+    console.print("[cyan bold]  BLUE TEAM[/cyan bold] - Defensive Security | Defend systems, detect threats")
     console.print()
-    
+
     choice = Prompt.ask(
         "[bold cyan]Select your team[/bold cyan]",
         choices=["red", "blue"],
         default="red"
     )
-    
+
     team_name = "Red Team (Offensive)" if choice == "red" else "Blue Team (Defensive)"
     confirm = Confirm.ask(f"[yellow]Confirm selection: {team_name}?[/yellow]")
-    
+
     if not confirm:
         print_info(console, "Selection cancelled.")
         return
-    
+
     # Select team
     success = engine.select_team(choice)
-    
+
     if success:
         team_info = TeamDatabase.get_team_info(TeamRole(choice))
-        
+
         console.print()
         if choice == "red":
             console.print(Panel.fit(
-                f"[red bold]⚔️  WELCOME TO RED TEAM  ⚔️[/red bold]\n\n"
+                f"[red bold]  WELCOME TO RED TEAM  [/red bold]\n\n"
                 f"[white]{team_info.motto}[/white]\n\n"
                 f"[green]Starting Tools Unlocked:[/green]\n" +
-                "\n".join(f"  ✓ {tool}" for tool in team_info.starting_tools),
+                "\n".join(f"   {tool}" for tool in team_info.starting_tools),
                 border_style="red",
             ))
         else:
             console.print(Panel.fit(
-                f"[cyan bold]🛡️  WELCOME TO BLUE TEAM  🛡️[/cyan bold]\n\n"
+                f"[cyan bold]  WELCOME TO BLUE TEAM  [/cyan bold]\n\n"
                 f"[white]{team_info.motto}[/white]\n\n"
                 f"[green]Starting Tools Unlocked:[/green]\n" +
-                "\n".join(f"  ✓ {tool}" for tool in team_info.starting_tools),
+                "\n".join(f"   {tool}" for tool in team_info.starting_tools),
                 border_style="cyan",
             ))
-        
-        print_success(console, "\n✓ Team selection complete!")
+
+        print_success(console, "\n Team selection complete!")
 
 
-# ========== Bounty System Commands ==========
+# ========== Game Commands ==========
 
-@app.command()
+@game_app.command("bounties")
 def game_bounties(
     level: int = typer.Option(1, "--level", "-l", help="Player level for mission filtering"),
 ) -> None:
-    """💰 Display the bounty board with available missions."""
+    """ Display the bounty board with available missions."""
     from nighthawk.cli.bounty_commands import show_bounty_board
     show_bounty_board(level)
 
 
-@app.command()
+@game_app.command("accept-mission")
 def game_accept_mission(
     mission_number: int = typer.Argument(..., help="Mission number to accept"),
     player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
     level: int = typer.Option(1, "--level", "-l", help="Player level"),
 ) -> None:
-    """✅ Accept a mission from the bounty board."""
+    """ Accept a mission from the bounty board."""
     from nighthawk.cli.bounty_commands import accept_mission
     accept_mission(mission_number, player_id, level)
 
 
-@app.command()
+@game_app.command("mission-list")
 def game_mission_list(
-    difficulty: str = typer.Option(None, "--difficulty", "-d", 
+    difficulty: str = typer.Option(None, "--difficulty", "-d",
                                    help="Filter by difficulty (easy, medium, hard, expert, legendary)"),
     level: int = typer.Option(1, "--level", "-l", help="Player level"),
     limit: int = typer.Option(20, "--limit", "-n", help="Maximum missions to show"),
 ) -> None:
-    """📋 List available missions with filtering."""
+    """ List available missions with filtering."""
     from nighthawk.cli.bounty_commands import list_missions
     list_missions(difficulty, level, limit)
 
 
-@app.command()
+@game_app.command("mission-info")
 def game_mission_info(
     mission_number: int = typer.Argument(..., help="Mission number to view details"),
     level: int = typer.Option(1, "--level", "-l", help="Player level"),
 ) -> None:
-    """🔍 View detailed information about a specific mission."""
+    """ View detailed information about a specific mission."""
     from nighthawk.cli.bounty_commands import mission_info
     mission_info(mission_number, level)
 
 
-@app.command()
+@game_app.command("active-missions")
 def game_active_missions(
     player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
 ) -> None:
-    """🎯 Show your active missions."""
+    """ Show your active missions."""
     from nighthawk.cli.bounty_commands import show_active_missions
     show_active_missions(player_id)
 
 
-@app.command()
+@game_app.command("complete-mission")
 def game_complete_mission(
     mission_number: int = typer.Argument(..., help="Mission number to complete"),
     level: int = typer.Option(1, "--level", "-l", help="Player level"),
 ) -> None:
-    """✨ Complete an active mission."""
+    """ Complete an active mission."""
     from nighthawk.cli.bounty_commands import complete_mission
     complete_mission(mission_number, level)
 
 
-@app.command()
+@game_app.command("mission-history")
 def game_mission_history(
     player_id: str = typer.Option("player", "--player-id", "-p", help="Player ID"),
 ) -> None:
-    """📜 Show your completed mission history."""
+    """ Show your completed mission history."""
     from nighthawk.cli.bounty_commands import show_mission_history
     show_mission_history(player_id)
 
 
-@app.command()
+@game_app.command("bounty-stats")
 def game_bounty_stats() -> None:
-    """📊 Display bounty system statistics."""
+    """ Display bounty system statistics."""
     from nighthawk.cli.bounty_commands import show_bounty_stats
     show_bounty_stats()
 
 
-@app.command()
+@game_app.command("refresh-bounties")
 def game_refresh_bounties(
     level: int = typer.Option(1, "--level", "-l", help="Player level"),
 ) -> None:
-    """🔄 Refresh bounty board with new missions."""
+    """ Refresh bounty board with new missions."""
     from nighthawk.cli.bounty_commands import refresh_bounty_board
     refresh_bounty_board(level)
 
 
-@app.command()
+@game_app.command("clients")
 def game_clients() -> None:
-    """👥 Display information about all bounty clients."""
+    """ Display information about all bounty clients."""
     from nighthawk.cli.bounty_commands import list_clients
     list_clients()
 
@@ -1490,39 +1492,43 @@ def _show_game_dashboard(engine: "GameEngine") -> None:
     """Show game dashboard."""
     state = engine.get_game_state()
     profile = engine.player.get_profile()
-    
-    team_icon = "⚔️" if profile.team.value == "red" else "🛡️"
+
+    team_icon = "" if profile.team.value == "red" else ""
     team_color = "red" if profile.team.value == "red" else "cyan"
-    
+
     console.print(Panel.fit(
         f"[{team_color} bold]{team_icon} {profile.username} - {profile.get_rank_title()} {team_icon}[/{team_color} bold]\n"
         f"[white]Level {profile.level} {profile.team.value.upper()} Team Operative[/white]",
         border_style=team_color,
-        title="[bold]🎮 OPERATIVE DASHBOARD[/bold]",
+        title="[bold] OPERATIVE DASHBOARD[/bold]",
     ))
     console.print()
-    
-    console.print(f"[cyan]💰 Balance:[/cyan] [yellow bold]₡{state['currency']['balance']:,}[/yellow bold]")
-    console.print(f"[cyan]⭐ Total XP:[/cyan] [yellow bold]{state['player']['xp']:,}[/yellow bold]")
-    console.print(f"[cyan]📈 Next Level:[/cyan] [yellow bold]{state['player']['xp_to_next']:,} XP[/yellow bold]")
-    console.print(f"[cyan]🎯 Missions:[/cyan] [yellow bold]{profile.stats.missions_completed}[/yellow bold]")
+
+    console.print(f"[cyan] Balance:[/cyan] [yellow bold]₡{state['currency']['balance']:,}[/yellow bold]")
+    console.print(f"[cyan]Total XP:[/cyan] [yellow bold]{state['player']['xp']:,}[/yellow bold]")
+    console.print(f"[cyan] Next Level:[/cyan] [yellow bold]{state['player']['xp_to_next']:,} XP[/yellow bold]")
+    console.print(f"[cyan] Missions:[/cyan] [yellow bold]{profile.stats.missions_completed}[/yellow bold]")
     console.print()
 
 
-@app.command()
+@game_app.command("dashboard-legacy", hidden=True)
 def game_dashboard() -> None:
     """Show your game progress dashboard."""
     from nighthawk.game.engine import GameEngine
-    
+
     engine = GameEngine()
-    
+
     # Try to load last save
     for slot in [1, 2, 3]:
         if engine.load_game(slot):
             _show_game_dashboard(engine)
             return
-    
-    print_error(console, "No game in progress! Use 'nighthawk game-start' first.")
+
+    print_error(console, "No game in progress! Use 'nighthawk game start' first.")
+
+
+app.add_typer(game_app, name="game")
+app.add_typer(redteam_app, name="redteam")
 
 
 if __name__ == "__main__":

@@ -26,11 +26,11 @@ class TeamInfo:
     color_scheme: str
     icon: str
     motto: str
-    
+
 
 class TeamDatabase:
     """Database of team information and content."""
-    
+
     RED_TEAM = TeamInfo(
         role=TeamRole.RED,
         name="Red Team - Offensive Security",
@@ -72,10 +72,10 @@ You'll learn real-world hacking techniques in a safe, simulated environment.
         starting_bonus_currency=500,
         starting_bonus_xp=100,
         color_scheme="red",
-        icon="⚔️",
+        icon="",
         motto="We break in so you can keep them out",
     )
-    
+
     BLUE_TEAM = TeamInfo(
         role=TeamRole.BLUE,
         name="Blue Team - Defensive Security",
@@ -117,10 +117,10 @@ You'll master the art of cybersecurity defense and incident response.
         starting_bonus_currency=500,
         starting_bonus_xp=100,
         color_scheme="blue",
-        icon="🛡️",
+        icon="",
         motto="We stand watch while others sleep",
     )
-    
+
     @classmethod
     def get_team_info(cls, role: TeamRole) -> TeamInfo:
         """Get team information by role."""
@@ -128,7 +128,7 @@ You'll master the art of cybersecurity defense and incident response.
             return cls.RED_TEAM
         else:
             return cls.BLUE_TEAM
-    
+
     @classmethod
     def get_all_teams(cls) -> List[TeamInfo]:
         """Get information for all teams."""
@@ -153,7 +153,7 @@ class MissionTemplate:
 
 class MissionLibrary:
     """Library of role-specific mission templates."""
-    
+
     # Red Team Missions
     RED_TEAM_MISSIONS = [
         MissionTemplate(
@@ -247,7 +247,7 @@ class MissionLibrary:
             category="vulnerability_research",
         ),
     ]
-    
+
     # Blue Team Missions
     BLUE_TEAM_MISSIONS = [
         MissionTemplate(
@@ -341,7 +341,7 @@ class MissionLibrary:
             category="forensics",
         ),
     ]
-    
+
     @classmethod
     def get_missions_for_team(cls, team_role: TeamRole, level: int = 1) -> List[MissionTemplate]:
         """Get available missions for team and level."""
@@ -349,10 +349,10 @@ class MissionLibrary:
             missions = cls.RED_TEAM_MISSIONS
         else:
             missions = cls.BLUE_TEAM_MISSIONS
-        
+
         # Filter by level requirement
         return [m for m in missions if m.required_level <= level]
-    
+
     @classmethod
     def get_mission_by_id(cls, mission_id: str) -> Optional[MissionTemplate]:
         """Get mission by ID."""
@@ -361,7 +361,7 @@ class MissionLibrary:
             if mission.mission_id == mission_id:
                 return mission
         return None
-    
+
     @classmethod
     def get_starter_missions(cls, team_role: TeamRole) -> List[MissionTemplate]:
         """Get starter missions for new players."""
@@ -371,25 +371,25 @@ class MissionLibrary:
 
 class TeamSelectionValidator:
     """Validate team selection and requirements."""
-    
+
     @staticmethod
     def can_select_team(has_existing_team: bool) -> bool:
         """Check if player can select a team."""
         # Can only select team once
         return not has_existing_team
-    
+
     @staticmethod
     def validate_team_choice(choice: str) -> Optional[TeamRole]:
         """Validate team choice input."""
         choice = choice.lower().strip()
-        
+
         if choice in ["red", "r", "1", "offensive", "attack"]:
             return TeamRole.RED
         elif choice in ["blue", "b", "2", "defensive", "defend"]:
             return TeamRole.BLUE
         else:
             return None
-    
+
     @staticmethod
     def get_team_requirements(team_role: TeamRole) -> Dict[str, Any]:
         """Get requirements for joining a team."""
@@ -403,7 +403,7 @@ class TeamSelectionValidator:
 
 class TeamBenefits:
     """Team-specific benefits and bonuses."""
-    
+
     RED_TEAM_BENEFITS = {
         "level_5": {
             "unlocks": ["advanced_scanner", "exploit_database"],
@@ -422,7 +422,7 @@ class TeamBenefits:
             "bonus": "Elite Red Team status - 25% XP bonus",
         },
     }
-    
+
     BLUE_TEAM_BENEFITS = {
         "level_5": {
             "unlocks": ["advanced_ids", "correlation_engine"],
@@ -441,7 +441,7 @@ class TeamBenefits:
             "bonus": "Elite Blue Team status - 25% XP bonus",
         },
     }
-    
+
     @classmethod
     def get_benefits_at_level(cls, team_role: TeamRole, level: int) -> List[Dict[str, Any]]:
         """Get all benefits unlocked up to this level."""
@@ -449,7 +449,7 @@ class TeamBenefits:
             benefits_db = cls.RED_TEAM_BENEFITS
         else:
             benefits_db = cls.BLUE_TEAM_BENEFITS
-        
+
         unlocked = []
         for req_level, benefits in benefits_db.items():
             req_level_int = int(req_level.split("_")[1])
@@ -459,9 +459,9 @@ class TeamBenefits:
                     "unlocks": benefits["unlocks"],
                     "bonus": benefits["bonus"],
                 })
-        
+
         return unlocked
-    
+
     @classmethod
     def get_next_benefit(cls, team_role: TeamRole, current_level: int) -> Optional[Dict[str, Any]]:
         """Get next benefit to be unlocked."""
@@ -469,7 +469,7 @@ class TeamBenefits:
             benefits_db = cls.RED_TEAM_BENEFITS
         else:
             benefits_db = cls.BLUE_TEAM_BENEFITS
-        
+
         for req_level, benefits in sorted(benefits_db.items()):
             req_level_int = int(req_level.split("_")[1])
             if current_level < req_level_int:
@@ -478,13 +478,13 @@ class TeamBenefits:
                     "unlocks": benefits["unlocks"],
                     "bonus": benefits["bonus"],
                 }
-        
+
         return None
 
 
 class TeamComparison:
     """Compare teams for player decision-making."""
-    
+
     @staticmethod
     def get_comparison_matrix() -> Dict[str, Dict[str, str]]:
         """Get side-by-side comparison of teams."""
@@ -514,29 +514,29 @@ class TeamComparison:
                 "blue": "Those who love protecting and defending systems",
             },
         }
-    
+
     @staticmethod
     def get_decision_helper(player_preferences: Dict[str, str]) -> TeamRole:
         """Help player decide based on preferences."""
         red_score = 0
         blue_score = 0
-        
+
         # Analyze preferences
         if player_preferences.get("prefer_offense", False):
             red_score += 2
         if player_preferences.get("prefer_defense", False):
             blue_score += 2
-        
+
         if player_preferences.get("creative_thinker", False):
             red_score += 1
         if player_preferences.get("analytical_thinker", False):
             blue_score += 1
-        
+
         if player_preferences.get("like_puzzles", False):
             red_score += 1
         if player_preferences.get("like_monitoring", False):
             blue_score += 1
-        
+
         # Return recommendation
         if red_score > blue_score:
             return TeamRole.RED
